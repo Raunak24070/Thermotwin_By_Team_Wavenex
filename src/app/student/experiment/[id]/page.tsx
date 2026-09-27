@@ -60,13 +60,15 @@ export default function VirtualLabExperimentPage() {
       lastTimeRef.current = timeNow;
 
       const state = usePhysicsStore.getState();
+      const isStopped = state.runStatus === 'STOPPED';
       const isPaused = state.runStatus === 'PAUSED';
       const isRunning = state.runStatus === 'RUNNING';
       const isHeating = state.simState.voltage > 0;
       const hasResidualHeat = state.simState.sensors.t1 > 20.05;
 
-      // Always advance thermal physics when running, heating, or cooling back to ambient
-      if (!isPaused && (isRunning || isHeating || hasResidualHeat)) {
+      // Advance physics only when not stopped/paused
+      // STOPPED = fully frozen (no residual cooling animation)
+      if (!isStopped && !isPaused && (isRunning || isHeating || hasResidualHeat)) {
         const speed = state.simSpeed;
         const dtSec = Math.min(dtMs / 1000, 0.1);
         stepSimulation(dtSec * speed);
