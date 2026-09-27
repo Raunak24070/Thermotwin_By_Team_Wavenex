@@ -37,6 +37,8 @@ export const Sensors3D: React.FC<Sensors3DProps> = ({
   selectedSensorId,
   onSelectSensor
 }) => {
+  const [hoveredSensorId, setHoveredSensorId] = React.useState<string | null>(null);
+
   // Map 0..0.5m rod length to -1.6 to +1.6 in 3D space
   const mapPositionTo3D = (posMeters: number): number => {
     return -1.6 + (posMeters / 0.5) * 3.2;
@@ -99,30 +101,36 @@ export const Sensors3D: React.FC<Sensors3DProps> = ({
               }}
               onPointerOver={(e) => {
                 e.stopPropagation();
+                setHoveredSensorId(sensor.id);
                 document.body.style.cursor = 'pointer';
               }}
               onPointerOut={() => {
+                setHoveredSensorId(null);
                 document.body.style.cursor = 'auto';
               }}
             >
               <sphereGeometry args={[0.075, 20, 20]} />
               <meshStandardMaterial
-                color={isSelected ? '#fbbf24' : beadThermal.color}
-                emissive={isSelected ? '#f59e0b' : beadThermal.emissive}
-                emissiveIntensity={isSelected ? 0.9 : beadThermal.intensity}
+                color={isSelected || hoveredSensorId === sensor.id ? '#fbbf24' : beadThermal.color}
+                emissive={isSelected || hoveredSensorId === sensor.id ? '#f59e0b' : beadThermal.emissive}
+                emissiveIntensity={isSelected ? 0.95 : hoveredSensorId === sensor.id ? 0.8 : beadThermal.intensity}
                 metalness={0.8}
                 roughness={0.2}
               />
             </mesh>
 
-            {/* Selection Highlight Ring */}
-            {isSelected && (
+            {/* Selection & Hover Highlight Ring */}
+            {(isSelected || hoveredSensorId === sensor.id) && (
               <mesh 
                 position={[0, sensor.type === 'rod' ? headPosY + 0.28 : headPosY, 0]}
                 rotation={[Math.PI / 2, 0, 0]}
               >
-                <ringGeometry args={[0.11, 0.15, 24]} />
-                <meshBasicMaterial color="#fbbf24" transparent opacity={0.9} />
+                <ringGeometry args={[0.10, 0.14, 24]} />
+                <meshBasicMaterial
+                  color={isSelected ? '#fbbf24' : '#38bdf8'}
+                  transparent
+                  opacity={isSelected ? 0.95 : 0.75}
+                />
               </mesh>
             )}
 

@@ -16,6 +16,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
+import { ThermoTwinLogo } from './ThermoTwinLogo';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -33,19 +34,9 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           
-          {/* Logo Brand */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-600 flex items-center justify-center shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform">
-              <Flame className="w-5 h-5 text-white animate-pulse" />
-            </div>
-            <div>
-              <span className="text-lg font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-amber-400 bg-clip-text text-transparent">
-                ThermoTwin<span className="text-amber-500 font-light">Web</span>
-              </span>
-              <span className="block text-[10px] font-mono text-slate-400 -mt-1 tracking-widest uppercase">
-                3D Virtual Thermal Laboratory
-              </span>
-            </div>
+          {/* Modernized ThermoTwin Logo */}
+          <Link href="/" className="hover:opacity-95 transition-opacity">
+            <ThermoTwinLogo size="md" />
           </Link>
 
           {/* Authenticated Navigation Links */}

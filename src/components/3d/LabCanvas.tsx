@@ -28,8 +28,18 @@ export const LabCanvas: React.FC = () => {
   } = usePhysicsStore();
 
   const [show3DLabels, setShow3DLabels] = React.useState<boolean>(true);
+  const [hoveredPart, setHoveredPart] = React.useState<string | null>(null);
 
-  // Selected sensor details
+  // Contextual descriptions shown on hover for educational clarity
+  const PART_CONTEXT: Record<string, { title: string; desc: string; color: string }> = {
+    HEATER:         { title: 'Electrical Heater', desc: 'Provides controlled heat input Q = V²/R (Joule heating). Current flows through nichrome resistor band.', color: 'amber' },
+    COOLING_JACKET: { title: 'Water Cooling Jacket', desc: 'Removes heat from the rod via forced convection. ΔT_water = T9 – T8 measures heat extracted.', color: 'cyan' },
+    ROD:            { title: 'Metallic Specimen Rod', desc: 'Heat conducts from heater (hot end) to cooler (cold end) following Fourier\'s Law: Q = –kA(dT/dx).', color: 'indigo' },
+    THERMOCOUPLES:  { title: 'Type-K Thermocouples T1–T7', desc: 'Measure temperature at 5 cm intervals. Click any probe to see its exact position and reading.', color: 'rose' },
+    METERS:         { title: 'Digital Voltmeter & Ammeter', desc: 'Measure electrical power delivered to heater: P = V × I = V²/R watts.', color: 'emerald' },
+  };
+
+
   const selectedSensor = selectedSensorId ? SENSORS.find((s) => s.id === selectedSensorId) : null;
   const selectedSensorTemp = selectedSensorId 
     ? (simState.sensors[selectedSensorId.toLowerCase() as keyof typeof simState.sensors] || 20.0) 
@@ -62,73 +72,57 @@ export const LabCanvas: React.FC = () => {
         <span className="text-[10px] font-mono font-semibold text-slate-400 mr-1 hidden sm:inline">
           INSPECT:
         </span>
-        <button
-          onClick={() => setInspectedPart(inspectedPart === 'HEATER' ? null : 'HEATER')}
-          className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-            inspectedPart === 'HEATER'
-              ? 'bg-amber-500 text-slate-950 border-amber-400'
-              : 'bg-slate-900/90 text-amber-300 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <Flame className="w-3.5 h-3.5" />
-          Heater
-        </button>
+        {([
+          { id: 'HEATER', icon: Flame, label: 'Heater', color: 'amber' },
+          { id: 'COOLING_JACKET', icon: Droplets, label: 'Cooler', color: 'cyan' },
+          { id: 'ROD', icon: Layers, label: 'Rod', color: 'indigo' },
+          { id: 'THERMOCOUPLES', icon: Thermometer, label: 'Sensors', color: 'rose' },
+          { id: 'METERS', icon: Gauge, label: 'Meters', color: 'emerald' },
+        ] as const).map(({ id, icon: Icon, label, color }) => (
+          <button
+            key={id}
+            onClick={() => setInspectedPart(inspectedPart === id ? null : id as any)}
+            onMouseEnter={() => setHoveredPart(id)}
+            onMouseLeave={() => setHoveredPart(null)}
+            className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
+              inspectedPart === id
+                ? {
+                    HEATER:         'bg-amber-500 text-slate-950 border-amber-400',
+                    COOLING_JACKET: 'bg-cyan-500 text-slate-950 border-cyan-400',
+                    ROD:            'bg-indigo-500 text-slate-950 border-indigo-400',
+                    THERMOCOUPLES:  'bg-rose-500 text-slate-950 border-rose-400',
+                    METERS:         'bg-emerald-500 text-slate-950 border-emerald-400',
+                  }[id]
+                : {
+                    HEATER:         'bg-slate-900/90 text-amber-300 border-slate-700/80 hover:bg-slate-800',
+                    COOLING_JACKET: 'bg-slate-900/90 text-cyan-300 border-slate-700/80 hover:bg-slate-800',
+                    ROD:            'bg-slate-900/90 text-indigo-300 border-slate-700/80 hover:bg-slate-800',
+                    THERMOCOUPLES:  'bg-slate-900/90 text-rose-300 border-slate-700/80 hover:bg-slate-800',
+                    METERS:         'bg-slate-900/90 text-emerald-300 border-slate-700/80 hover:bg-slate-800',
+                  }[id]
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5" />
+            {label}
+          </button>
+        ))}
 
-        <button
-          onClick={() => setInspectedPart(inspectedPart === 'COOLING_JACKET' ? null : 'COOLING_JACKET')}
-          className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-            inspectedPart === 'COOLING_JACKET'
-              ? 'bg-cyan-500 text-slate-950 border-cyan-400'
-              : 'bg-slate-900/90 text-cyan-300 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <Droplets className="w-3.5 h-3.5" />
-          Cooler
-        </button>
-
-        <button
-          onClick={() => setInspectedPart(inspectedPart === 'ROD' ? null : 'ROD')}
-          className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-            inspectedPart === 'ROD'
-              ? 'bg-indigo-500 text-slate-950 border-indigo-400'
-              : 'bg-slate-900/90 text-indigo-300 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <Layers className="w-3.5 h-3.5" />
-          Rod
-        </button>
-
-        <button
-          onClick={() => setInspectedPart(inspectedPart === 'THERMOCOUPLES' ? null : 'THERMOCOUPLES')}
-          className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-            inspectedPart === 'THERMOCOUPLES'
-              ? 'bg-rose-500 text-slate-950 border-rose-400'
-              : 'bg-slate-900/90 text-rose-300 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <Thermometer className="w-3.5 h-3.5" />
-          Sensors
-        </button>
-
-        <button
-          onClick={() => setInspectedPart(inspectedPart === 'METERS' ? null : 'METERS')}
-          className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-            inspectedPart === 'METERS'
-              ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-              : 'bg-slate-900/90 text-emerald-300 border-slate-700/80 hover:bg-slate-800'
-          }`}
-        >
-          <Gauge className="w-3.5 h-3.5" />
-          Meters
-        </button>
       </div>
+
+      {/* Part hover context tooltip */}
+      {hoveredPart && PART_CONTEXT[hoveredPart] && (
+        <div className="absolute top-12 right-3 z-20 max-w-[240px] bg-slate-900/95 border border-slate-700 rounded-lg p-2.5 shadow-2xl backdrop-blur-md pointer-events-none">
+          <div className="text-[11px] font-bold text-slate-100 mb-1">{PART_CONTEXT[hoveredPart].title}</div>
+          <div className="text-[10px] font-mono text-slate-400 leading-relaxed">{PART_CONTEXT[hoveredPart].desc}</div>
+        </div>
+      )}
 
       {/* Floating 3D Component Inspection HUD */}
       <Apparatus3DHUD />
 
-      {/* Sensor Detail Inspection Card (Clicking any sensor displays ID, location, temperature) */}
+      {/* Sensor Detail Inspection Card */}
       {selectedSensor && selectedSensorTemp !== null && (
-        <div className="absolute bottom-4 right-4 z-20 bg-slate-900/95 border border-sky-500/50 rounded-xl p-3 shadow-2xl backdrop-blur-md text-slate-100 w-72 animate-in fade-in slide-in-from-bottom-2">
+        <div className="absolute bottom-4 right-4 z-20 bg-slate-900/95 border border-sky-500/50 rounded-xl p-3 shadow-2xl backdrop-blur-md text-slate-100 w-72">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
             <div className="flex items-center gap-1.5">
               <Thermometer className="w-4 h-4 text-sky-400" />
