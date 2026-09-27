@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ThermoTwin — Thermal Conductivity Digital Twin Platform
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
@@ -153,3 +154,6 @@ You can register your intended **7 student accounts** and **3 teacher accounts**
 - **Animations**: GSAP v3, Framer Motion v13
 - **Charts**: Recharts v3
 - **PDF Export**: jsPDF v4
+=======
+# Thermotwin_By_Team_Wavenex
+>>>>>>> 3b512a9ce327b743f1648bb60fe809f55cc79ac7
