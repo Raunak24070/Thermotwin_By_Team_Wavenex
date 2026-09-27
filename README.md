@@ -1,6 +1,6 @@
 # ThermoTwin — Thermal Conductivity Digital Twin Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-14%2B-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Three.js](https://img.shields.io/badge/Three.js-r128%2B-black?style=flat-square&logo=three.js)](https://threejs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
@@ -21,10 +21,11 @@ It couples an authentic 1D Finite Difference Time Domain (FDTD) thermal diffusio
 ### 2. Installation & Running
 
 ```bash
-# Navigate to the project root
-cd D:\antigravity\scratch\thermotwin-web
+# Clone the repository
+git clone https://github.com/<your-username>/thermotwin-web.git
+cd thermotwin-web
 
-# Install dependencies (if not already installed)
+# Install dependencies
 npm install
 
 # Start development server
@@ -144,9 +145,11 @@ You can register your intended **7 student accounts** and **3 teacher accounts**
 ---
 
 ## 🛠️ Technology Stack
-- **Framework**: Next.js 14+ (App Router, Turbopack)
+- **Framework**: Next.js 16 (App Router, Turbopack)
+- **Language**: TypeScript 5
 - **Styling**: Tailwind CSS v4, Lucide React Icons
-- **3D Graphics**: Three.js, React Three Fiber, React Three Drei
-- **State Management**: Zustand with persistent storage
-- **Animations**: GSAP, Framer Motion
-- **Math & Charts**: KaTeX, Canvas 2D, SVG Scientific Visualizations
+- **3D Graphics**: Three.js r186, React Three Fiber v9, React Three Drei v10
+- **State Management**: Zustand v5 with persistent localStorage
+- **Animations**: GSAP v3, Framer Motion v13
+- **Charts**: Recharts v3
+- **PDF Export**: jsPDF v4

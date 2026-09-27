@@ -1,7 +1,21 @@
 {
   "name": "thermotwin-web",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "ThermoTwin — Virtual Digital Twin Laboratory for Thermal Conductivity of a Metallic Rod (YCCE September 2026)",
+  "author": "Raunak Pantawane",
+  "license": "MIT",
   "private": true,
+  "keywords": [
+    "thermal-conductivity",
+    "digital-twin",
+    "virtual-lab",
+    "fourier",
+    "fdtd",
+    "nextjs",
+    "threejs",
+    "physics-simulation",
+    "ycce"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
