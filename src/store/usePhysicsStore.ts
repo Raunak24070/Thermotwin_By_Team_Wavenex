@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { MaterialId, MaterialProperties, SimulationState, ObservationRecord } from '../physics/types';
-import { MATERIALS } from '../physics/materials';
+import { MATERIALS, APPARATUS_CONFIG } from '../physics/materials';
 import { Thermal1DSolver } from '../physics/1dRodSolver';
 import { ExperimentEvent } from '../types/db';
 
@@ -58,6 +58,7 @@ interface PhysicsStoreState {
   startAutomatedDemo: () => void;
   cancelAutomatedDemo: () => void;
   setVoltage: (volts: number) => void;
+  setCurrent: (amps: number) => void;
   setWaterFlow: (flowLmin: number) => void;
   setMaterial: (materialId: MaterialId) => void;
   setViewMode: (mode: ViewMode) => void;
@@ -263,6 +264,13 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
       simState: nextState,
       runStatus: clamped > 0 && runStatus === 'IDLE' ? 'RUNNING' : runStatus
     });
+  },
+
+  setCurrent: (amps: number) => {
+    const r = APPARATUS_CONFIG.heaterResistanceR;
+    const maxAmps = APPARATUS_CONFIG.maxVoltage / r; // 0.80 A for 12V / 15 ohms
+    const clampedAmps = Math.max(0, Math.min(maxAmps, amps));
+    get().setVoltage(clampedAmps * r);
   },
 
   setWaterFlow: (flowLmin: number) => {

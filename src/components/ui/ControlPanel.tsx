@@ -24,6 +24,7 @@ export const ControlPanel: React.FC = () => {
     simSpeed,
     experimentMode,
     setVoltage,
+    setCurrent,
     setWaterFlow,
     setMaterial,
     setViewMode,
@@ -88,60 +89,98 @@ export const ControlPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Electrical Heater Voltage Controller */}
-      <div className="flex flex-col gap-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+      {/* 2. Electrical Dimmer-Stat / Variac (Adjustable Voltage & Current) */}
+      <div className="flex flex-col gap-2.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
             <Zap className="w-4 h-4 text-amber-400" />
-            Electrical Heater Voltage
+            Dimmer-Stat / Variac (Heater)
           </span>
-          <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 text-sm">
-            {simState.voltage.toFixed(1)} V
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 text-xs">
+              {simState.voltage.toFixed(1)} V
+            </span>
+            <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 text-xs">
+              {simState.current.toFixed(2)} A
+            </span>
+          </div>
         </div>
 
-        <input
-          type="range"
-          min="0"
-          max="12"
-          step="0.5"
-          value={simState.voltage}
-          onChange={(e) => setVoltage(parseFloat(e.target.value))}
-          className="w-full accent-amber-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
-        />
+        {/* Voltage Dial / Slider */}
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-[10px] font-mono text-slate-400">
+            <span>Voltage Control (V):</span>
+            <span className="text-amber-400 font-bold">{simState.voltage.toFixed(1)} / 12.0 V</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="12"
+            step="0.1"
+            value={simState.voltage}
+            onChange={(e) => setVoltage(parseFloat(e.target.value))}
+            className="w-full accent-amber-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+          />
+        </div>
 
-        <div className="grid grid-cols-3 text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
-          <div>I = {simState.current.toFixed(2)} A</div>
-          <div className="text-center">R = {simState.resistance} Ω</div>
+        {/* Current Dial / Slider */}
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-[10px] font-mono text-slate-400">
+            <span>Current Control (I = V/R):</span>
+            <span className="text-amber-300 font-bold">{simState.current.toFixed(2)} / 0.80 A</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="0.80"
+            step="0.01"
+            value={simState.current}
+            onChange={(e) => setCurrent(parseFloat(e.target.value))}
+            className="w-full accent-amber-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-800/60">
+          <div>R = {simState.resistance} Ω (Fixed)</div>
+          <div className="text-center text-slate-300 font-medium">I = {simState.current.toFixed(2)} A</div>
           <div className="text-right text-emerald-400 font-bold">P = {simState.power.toFixed(1)} W</div>
         </div>
       </div>
 
-      {/* 3. Water Cooling Flow Controller */}
-      <div className="flex flex-col gap-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+      {/* 3. Cooling Water Flow (Virtual Needle Valve & Rotameter) */}
+      <div className="flex flex-col gap-2.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
             <Droplets className="w-4 h-4 text-cyan-400" />
-            Cooling Water Flow Rate
+            Virtual Valve &amp; Rotameter
           </span>
-          <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 text-sm">
+          <span className="font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20 text-xs">
             {simState.waterFlowLmin.toFixed(2)} L/min
           </span>
         </div>
 
-        <input
-          type="range"
-          min="0"
-          max="3.0"
-          step="0.1"
-          value={simState.waterFlowLmin}
-          onChange={(e) => setWaterFlow(parseFloat(e.target.value))}
-          className="w-full accent-cyan-500 cursor-pointer h-2 bg-slate-800 rounded-lg"
-        />
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-[10px] font-mono text-slate-400">
+            <span>Valve Opening:</span>
+            <span className="text-cyan-300 font-bold">{((simState.waterFlowLmin / 3.0) * 100).toFixed(0)}% Open</span>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="3.0"
+            step="0.05"
+            value={simState.waterFlowLmin}
+            onChange={(e) => setWaterFlow(parseFloat(e.target.value))}
+            className="w-full accent-cyan-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+          />
+        </div>
 
-        <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/60">
-          <span>Inlet T8: {simState.sensors.t8.toFixed(1)}°C</span>
-          <span className="text-cyan-300 font-bold">Outlet T9: {simState.sensors.t9.toFixed(1)}°C</span>
+        <div className="grid grid-cols-3 text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-800/60">
+          <div>T8 In: <span className="text-slate-200">{simState.sensors.t8.toFixed(1)}°C</span></div>
+          <div className="text-center">T9 Out: <span className="text-cyan-300 font-bold">{simState.sensors.t9.toFixed(1)}°C</span></div>
+          <div className="text-right text-indigo-300 font-bold">
+            ΔT: {(Math.max(0, simState.sensors.t9 - simState.sensors.t8)).toFixed(2)}°C
+          </div>
         </div>
       </div>
 
