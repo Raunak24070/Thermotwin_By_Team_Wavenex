@@ -30,10 +30,19 @@ export default function TeacherDashboard() {
     return null;
   }
 
+  const mySubmissions = submissions.filter((sub) => {
+    if (!currentUser) return false;
+    if (sub.targetTeacherId && sub.targetTeacherId === currentUser.id) return true;
+    if (sub.targetTeacherEmail && sub.targetTeacherEmail.toLowerCase() === currentUser.email.toLowerCase()) return true;
+    if (sub.targetClassCode && currentUser.classId && sub.targetClassCode.toUpperCase() === currentUser.classId.toUpperCase()) return true;
+    if (!sub.targetTeacherId && !sub.targetTeacherEmail && !sub.targetClassCode) return true;
+    return false;
+  });
+
   const activeCount = Object.values(liveStudents).filter((s) => s.isOnline).length;
-  const pendingReviewCount = submissions.filter((s) => s.reviewStatus === 'PENDING').length;
-  const avgError = submissions.length > 0
-    ? (submissions.reduce((acc, s) => acc + s.percentageError, 0) / submissions.length).toFixed(2)
+  const pendingReviewCount = mySubmissions.filter((s) => s.reviewStatus === 'PENDING').length;
+  const avgError = mySubmissions.length > 0
+    ? (mySubmissions.reduce((acc, s) => acc + s.percentageError, 0) / mySubmissions.length).toFixed(2)
     : '0.00';
 
   return (

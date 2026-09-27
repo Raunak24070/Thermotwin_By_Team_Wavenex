@@ -12,10 +12,15 @@ interface FourierWorkbenchProps {
 }
 
 export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedSuccess }) => {
-  const { simState, observations, experimentMode } = usePhysicsStore();
+  const { simState, observations, experimentMode, apparatusConfig } = usePhysicsStore();
   const { submitResult } = useClassStore();
-  const { currentUser } = useAuthStore();
+  const { currentUser, registeredUsers } = useAuthStore();
+  
   const [submissionFeedback, setSubmissionFeedback] = useState<string | null>(null);
+  const [selectedFacultyOption, setSelectedFacultyOption] = useState<string>('');
+  const [customFacultyInput, setCustomFacultyInput] = useState<string>('');
+
+  const registeredTeachers = registeredUsers.filter((u) => u.role === 'TEACHER');
 
   const analysis = performFourierAnalysis(
     simState.voltage,
@@ -33,7 +38,8 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
     simState.sensors.t9,
     simState.waterFlowLmin,
     simState.material.thermalConductivity,
-    simState.steadyStateStatus
+    simState.steadyStateStatus,
+    apparatusConfig.crossSectionArea
   );
 
   const isRealLab = experimentMode === 'REAL_LAB';
@@ -49,6 +55,34 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
 
     if (isRealLab && observations.length < 3) {
       setSubmissionFeedback(`Real Laboratory Exam requires at least 3 timed observation snapshots logged in your notebook (currently recorded: ${observations.length}/3).`);
+      return;
+    }
+
+    // Determine target teacher
+    let targetTeacherId: string | undefined = undefined;
+    let targetTeacherEmail: string | undefined = undefined;
+    let targetClassCode: string | undefined = undefined;
+
+    if (selectedFacultyOption && selectedFacultyOption !== 'CUSTOM') {
+      const teacher = registeredTeachers.find((t) => t.id === selectedFacultyOption);
+      if (teacher) {
+        targetTeacherId = teacher.id;
+        targetTeacherEmail = teacher.email;
+      }
+    } else if (customFacultyInput.trim()) {
+      const input = customFacultyInput.trim();
+      if (input.includes('@')) {
+        targetTeacherEmail = input.toLowerCase();
+        // check if matching registered teacher
+        const found = registeredTeachers.find((t) => t.email.toLowerCase() === input.toLowerCase());
+        if (found) targetTeacherId = found.id;
+      } else {
+        targetClassCode = input.toUpperCase();
+      }
+    }
+
+    if (isRealLab && !targetTeacherId && !targetTeacherEmail && !targetClassCode) {
+      setSubmissionFeedback('Please specify the destination Faculty Member, Teacher Email, or Classroom Code before submitting your exam.');
       return;
     }
 
@@ -83,7 +117,10 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
       observationCount: observations.length,
       mode: isRealLab ? 'REAL_LAB' : 'DEMO',
       isCertifiedRealLab: isRealLab,
-      gradeScore: isRealLab ? gradeScore : undefined
+      gradeScore: isRealLab ? gradeScore : undefined,
+      targetTeacherId,
+      targetTeacherEmail,
+      targetClassCode
     });
 
     setSubmissionFeedback('SUCCESS');
@@ -120,11 +157,11 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
 
         {/* Cross Sectional Area */}
         <div className="bg-slate-950/60 p-3 rounded-xl border border-slate-800 flex flex-col justify-between">
-          <span className="text-[10px] font-mono text-slate-400 uppercase">2. Area A</span>
+          <span className="text-[10px] font-mono text-slate-400 uppercase">2. Area A (User Input)</span>
           <div className="text-xl font-extrabold font-mono text-indigo-300 my-1">
-            4.91×10⁻⁴ <span className="text-xs text-slate-400">m²</span>
+            {(apparatusConfig.crossSectionArea * 1e4).toFixed(2)}×10⁻⁴ <span className="text-xs text-slate-400">m²</span>
           </div>
-          <span className="text-[9px] font-mono text-slate-500">A = π × (0.025/2)² m²</span>
+          <span className="text-[9px] font-mono text-slate-500">D = {apparatusConfig.rodDiameterMm} mm &bull; A = &pi;&times;(D/2)&sup2;</span>
         </div>
 
         {/* Temperature Gradient dT/dx */}
@@ -145,6 +182,52 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
           <span className="text-[9px] font-mono text-amber-300/80">Ref ({simState.material.name}): {analysis.referenceK}</span>
         </div>
 
+      </div>
+
+      {/* Faculty Destination Selector */}
+      <div className="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+        <div className="flex flex-col gap-1 w-full md:w-auto">
+          <label className="text-slate-300 font-semibold flex items-center gap-1.5 text-xs">
+            <span className="text-amber-400">📤</span>
+            Submit Report To Faculty / Instructor:
+          </label>
+          <span className="text-[11px] font-mono text-slate-500">
+            Select a faculty member or enter their institutional mail ID / classroom code.
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+          {registeredTeachers.length > 0 && (
+            <select
+              value={selectedFacultyOption}
+              onChange={(e) => {
+                setSelectedFacultyOption(e.target.value);
+                if (e.target.value !== 'CUSTOM') {
+                  setCustomFacultyInput('');
+                }
+              }}
+              className="bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 cursor-pointer"
+            >
+              <option value="">— Select Faculty Member —</option>
+              {registeredTeachers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} ({t.email})
+                </option>
+              ))}
+              <option value="CUSTOM">✏️ Enter Mail ID / Class Code...</option>
+            </select>
+          )}
+
+          {(registeredTeachers.length === 0 || selectedFacultyOption === 'CUSTOM') && (
+            <input
+              type="text"
+              placeholder="e.g. teacher@institution.edu or THERMO-7K2P"
+              value={customFacultyInput}
+              onChange={(e) => setCustomFacultyInput(e.target.value)}
+              className="bg-slate-900 border border-slate-700 text-slate-100 text-xs font-mono rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-amber-500 min-w-[260px]"
+            />
+          )}
+        </div>
       </div>
 
       {/* Accuracy & Energy Balance comparison */}
@@ -177,7 +260,7 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
                 : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
             }`}>
               <CheckCircle className="w-4 h-4 text-emerald-400" />
-              {isRealLab ? '✅ Official Certified Lab Exam Submitted to Teacher!' : '🚀 Demo / Practice Attempt Saved!'}
+              {isRealLab ? '✅ Official Certified Lab Exam Submitted to Faculty!' : '🚀 Demo / Practice Attempt Saved!'}
             </div>
           ) : (
             <button

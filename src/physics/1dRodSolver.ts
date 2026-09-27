@@ -20,6 +20,7 @@ export class Thermal1DSolver {
   private voltage: number = 0;
   private waterFlowLmin: number = 0;
   private timeSeconds: number = 0;
+  private resistanceR: number = APPARATUS_CONFIG.heaterResistanceR;
 
   constructor(material: MaterialProperties, nodeCount: number = 50) {
     this.material = material;
@@ -37,6 +38,15 @@ export class Thermal1DSolver {
       this.temperatures[i] = APPARATUS_CONFIG.ambientTemperatureTamb;
       this.rateOfChange[i] = 0;
     }
+  }
+
+  public setApparatusDimensions(diameterM: number, lengthM: number, resistanceR: number) {
+    this.diameter = diameterM;
+    this.rodLength = lengthM;
+    this.resistanceR = resistanceR;
+    this.area = Math.PI * Math.pow(diameterM / 2, 2);
+    this.perimeter = Math.PI * this.diameter;
+    this.dx = this.rodLength / (this.nodeCount - 1);
   }
 
   public setMaterial(material: MaterialProperties) {
@@ -76,7 +86,7 @@ export class Thermal1DSolver {
     const subSteps = Math.max(1, Math.ceil(dtSeconds / maxStableDt));
     const dt = dtSeconds / subSteps;
     
-    const R = APPARATUS_CONFIG.heaterResistanceR;
+    const R = this.resistanceR;
     const current = this.voltage / R;
     const power = (this.voltage * this.voltage) / R; // P = V²/R = V*I
     

@@ -13,6 +13,17 @@ export default function TeacherResultsPage() {
   const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState('');
 
+  // Filter submissions sent specifically to this faculty member
+  const mySubmissions = submissions.filter((sub) => {
+    if (!currentUser) return false;
+    if (sub.targetTeacherId && sub.targetTeacherId === currentUser.id) return true;
+    if (sub.targetTeacherEmail && sub.targetTeacherEmail.toLowerCase() === currentUser.email.toLowerCase()) return true;
+    if (sub.targetClassCode && currentUser.classId && sub.targetClassCode.toUpperCase() === currentUser.classId.toUpperCase()) return true;
+    // Fallback if untargeted
+    if (!sub.targetTeacherId && !sub.targetTeacherEmail && !sub.targetClassCode) return true;
+    return false;
+  });
+
   const handleSaveFeedback = (submissionId: string) => {
     if (!feedbackText.trim() || !currentUser) return;
     addTeacherFeedback(submissionId, feedbackText.trim(), currentUser.name);
@@ -29,19 +40,21 @@ export default function TeacherResultsPage() {
           Student Experiment Submissions &amp; Review Queue
         </h1>
         <p className="text-xs text-slate-400 font-mono mt-0.5">
-          Inspect student experimental observations, Fourier thermal conductivity calculations, and provide feedback.
+          Review queue for faculty: <strong className="text-slate-200">{currentUser?.name || 'Instructor'}</strong> ({currentUser?.email})
         </p>
       </div>
 
-      {submissions.length === 0 ? (
+      {mySubmissions.length === 0 ? (
         <div className="p-12 text-center bg-slate-900 border border-slate-800 rounded-2xl">
           <FileSpreadsheet className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-          <h3 className="font-extrabold text-base text-slate-300">No Submissions Yet</h3>
-          <p className="text-xs text-slate-500 mt-1">Student submissions will appear here as soon as they complete steady state in the 3D Virtual Lab.</p>
+          <h3 className="font-extrabold text-base text-slate-300">No Submissions For You Yet</h3>
+          <p className="text-xs text-slate-500 mt-1">
+            Student submissions routed to your account ({currentUser?.email}) will appear here as students complete and submit their experiments.
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {submissions.map((sub) => {
+          {mySubmissions.map((sub) => {
             const isReviewed = sub.reviewStatus === 'REVIEWED';
 
             return (

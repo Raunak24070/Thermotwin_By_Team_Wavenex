@@ -23,10 +23,11 @@ export const ControlPanel: React.FC = () => {
     viewMode,
     simSpeed,
     experimentMode,
+    apparatusConfig,
     setVoltage,
-    setCurrent,
     setWaterFlow,
     setMaterial,
+    setApparatusConfig,
     setViewMode,
     setSimSpeed,
     fastForwardToSteadyState,
@@ -89,7 +90,71 @@ export const ControlPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Electrical Dimmer-Stat / Variac (Adjustable Voltage & Current) */}
+      {/* 2. Apparatus Physical Parameters (User Input) */}
+      <div className="flex flex-col gap-2.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-semibold text-slate-200 flex items-center gap-1.5">
+            <Layers className="w-4 h-4 text-indigo-400" />
+            Apparatus Geometry &amp; Resistance
+          </span>
+          <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+            A = {(apparatusConfig.crossSectionArea * 1e4).toFixed(2)} cm²
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          {/* Rod Diameter */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono text-slate-400">Rod Diam. (mm)</label>
+            <input
+              type="number"
+              min={10}
+              max={50}
+              step={1}
+              value={apparatusConfig.rodDiameterMm}
+              onChange={(e) => setApparatusConfig({ rodDiameterMm: Math.max(10, Math.min(50, Number(e.target.value) || 25)) })}
+              className="bg-slate-900 border border-slate-700 text-slate-100 text-xs font-mono rounded px-2 py-1 w-full focus:outline-none focus:border-indigo-500"
+            />
+            <span className="text-[9px] font-mono text-slate-500">D = {apparatusConfig.rodDiameterMm} mm</span>
+          </div>
+
+          {/* Rod Length */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono text-slate-400">Length (cm)</label>
+            <input
+              type="number"
+              min={20}
+              max={100}
+              step={5}
+              value={apparatusConfig.rodLengthCm}
+              onChange={(e) => setApparatusConfig({ rodLengthCm: Math.max(20, Math.min(100, Number(e.target.value) || 50)) })}
+              className="bg-slate-900 border border-slate-700 text-slate-100 text-xs font-mono rounded px-2 py-1 w-full focus:outline-none focus:border-indigo-500"
+            />
+            <span className="text-[9px] font-mono text-slate-500">L = {(apparatusConfig.rodLengthCm / 100).toFixed(2)} m</span>
+          </div>
+
+          {/* Heater Resistance */}
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] font-mono text-slate-400">Heater R (Ω)</label>
+            <input
+              type="number"
+              min={5}
+              max={50}
+              step={0.5}
+              value={apparatusConfig.heaterResistanceR}
+              onChange={(e) => setApparatusConfig({ heaterResistanceR: Math.max(5, Math.min(50, Number(e.target.value) || 15)) })}
+              className="bg-slate-900 border border-slate-700 text-slate-100 text-xs font-mono rounded px-2 py-1 w-full focus:outline-none focus:border-indigo-500"
+            />
+            <span className="text-[9px] font-mono text-slate-500">R = {apparatusConfig.heaterResistanceR.toFixed(1)} Ω</span>
+          </div>
+        </div>
+
+        <div className="text-[10px] font-mono text-slate-500 bg-slate-900/60 p-1.5 rounded border border-slate-800">
+          Cross-section Area: <span className="text-slate-300 font-semibold">{apparatusConfig.crossSectionArea.toExponential(4)} m²</span> (A = π·(D/2)²)
+        </div>
+      </div>
+
+      {/* 3. Electrical Dimmer-Stat / Variac (Adjustable Voltage & Derived Current) */}
       <div className="flex flex-col gap-2.5 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
@@ -106,7 +171,7 @@ export const ControlPanel: React.FC = () => {
           </div>
         </div>
 
-        {/* Voltage Dial / Slider */}
+        {/* Voltage Dial / Slider - Primary User Control */}
         <div className="flex flex-col gap-1">
           <div className="flex justify-between text-[10px] font-mono text-slate-400">
             <span>Voltage Control (V):</span>
@@ -123,25 +188,25 @@ export const ControlPanel: React.FC = () => {
           />
         </div>
 
-        {/* Current Dial / Slider */}
-        <div className="flex flex-col gap-1">
+        {/* Current Display Bar (Read-Only — Derived from Ohm's Law I = V/R) */}
+        <div className="flex flex-col gap-1.5 bg-slate-900/50 p-2 rounded-lg border border-slate-800/70">
           <div className="flex justify-between text-[10px] font-mono text-slate-400">
-            <span>Current Control (I = V/R):</span>
-            <span className="text-amber-300 font-bold">{simState.current.toFixed(2)} / 0.80 A</span>
+            <span>Derived Current (I = V/R):</span>
+            <span className="text-amber-300 font-bold">{simState.current.toFixed(2)} A</span>
           </div>
-          <input
-            type="range"
-            min="0"
-            max="0.80"
-            step="0.01"
-            value={simState.current}
-            onChange={(e) => setCurrent(parseFloat(e.target.value))}
-            className="w-full accent-amber-400 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
-          />
+          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-500 to-amber-300 rounded-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (simState.current / (12 / apparatusConfig.heaterResistanceR)) * 100)}%` }}
+            />
+          </div>
+          <span className="text-[9px] font-mono text-slate-500">
+            I = {simState.voltage.toFixed(1)} V ÷ {apparatusConfig.heaterResistanceR.toFixed(1)} Ω = {simState.current.toFixed(2)} A (Ohm's Law)
+          </span>
         </div>
 
         <div className="grid grid-cols-3 text-[11px] font-mono text-slate-400 pt-1.5 border-t border-slate-800/60">
-          <div>R = {simState.resistance} Ω (Fixed)</div>
+          <div>R = {apparatusConfig.heaterResistanceR.toFixed(1)} Ω</div>
           <div className="text-center text-slate-300 font-medium">I = {simState.current.toFixed(2)} A</div>
           <div className="text-right text-emerald-400 font-bold">P = {simState.power.toFixed(1)} W</div>
         </div>

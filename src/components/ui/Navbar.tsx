@@ -13,7 +13,8 @@ import {
   LogIn,
   UserPlus,
   LogOut,
-  User
+  User,
+  BookOpen
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { ThermoTwinLogo } from './ThermoTwinLogo';
@@ -88,6 +89,17 @@ export const Navbar: React.FC = () => {
                     <FileSpreadsheet className="w-4 h-4" />
                     Submissions
                   </Link>
+                  <Link
+                    href="/experiment-guide"
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      pathname === '/experiment-guide'
+                        ? 'bg-slate-800 text-amber-400 border border-slate-700'
+                        : 'text-slate-300 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-400" />
+                    Guide &amp; Parameters
+                  </Link>
                 </>
               ) : (
                 <>
@@ -124,10 +136,35 @@ export const Navbar: React.FC = () => {
                     <Activity className="w-4 h-4" />
                     Attempt History
                   </Link>
+                  <Link
+                    href="/experiment-guide"
+                    className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                      pathname === '/experiment-guide'
+                        ? 'bg-slate-800 text-amber-400 border border-slate-700'
+                        : 'text-slate-300 hover:bg-slate-800/60'
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 text-indigo-400" />
+                    Guide &amp; Parameters
+                  </Link>
                 </>
               )}
             </nav>
-          ) : null}
+          ) : (
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
+                href="/experiment-guide"
+                className={`px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+                  pathname === '/experiment-guide'
+                    ? 'bg-slate-800 text-amber-400 border border-slate-700'
+                    : 'text-slate-300 hover:bg-slate-800/60'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-indigo-400" />
+                Experiment Guide &amp; Parameters
+              </Link>
+            </nav>
+          )}
 
           {/* User Profile & Auth Buttons */}
           <div className="flex items-center gap-3">
@@ -164,6 +201,13 @@ export const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center gap-2 text-xs font-semibold">
+                <Link
+                  href="/experiment-guide"
+                  className="px-3 py-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 flex md:hidden items-center gap-1.5 transition-all text-xs"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                  Guide
+                </Link>
                 <Link
                   href="/login"
                   className="px-3.5 py-2 rounded-xl text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5 transition-all"

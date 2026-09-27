@@ -48,8 +48,17 @@ interface PhysicsStoreState {
     power: number;
   }[];
   
+  // Apparatus Physical Dimensions & Configuration (User Configurable)
+  apparatusConfig: {
+    rodDiameterMm: number;
+    rodLengthCm: number;
+    heaterResistanceR: number;
+    crossSectionArea: number;
+  };
+
   // Actions
   initSimulation: (materialId?: MaterialId) => void;
+  setApparatusConfig: (updates: Partial<{ rodDiameterMm: number; rodLengthCm: number; heaterResistanceR: number }>) => void;
   startExperiment: () => void;
   pauseExperiment: () => void;
   stopExperiment: () => void;
@@ -103,7 +112,30 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
       details: `Experiment initialized with material ${initialMaterial.name}`
     }
   ],
+  apparatusConfig: {
+    rodDiameterMm: 25,
+    rodLengthCm: 50,
+    heaterResistanceR: 15.0,
+    crossSectionArea: APPARATUS_CONFIG.crossSectionArea,
+  },
   chartDataHistory: [],
+
+  setApparatusConfig: (updates) => {
+    const { apparatusConfig, solver, addEvent } = get();
+    const newConfig = { ...apparatusConfig, ...updates };
+    const rodDiameterM = newConfig.rodDiameterMm / 1000;
+    const rodLengthM = newConfig.rodLengthCm / 100;
+    const r = newConfig.heaterResistanceR;
+    newConfig.crossSectionArea = Math.PI * Math.pow(rodDiameterM / 2, 2);
+
+    solver.setApparatusDimensions(rodDiameterM, rodLengthM, r);
+    const nextState = solver.step(0.01);
+    addEvent('EXPERIMENT_STARTED', `Apparatus parameters updated: D = ${newConfig.rodDiameterMm}mm (A = ${(newConfig.crossSectionArea * 1e4).toFixed(2)} cm²), L = ${newConfig.rodLengthCm}cm, R = ${r}Ω`);
+    set({
+      apparatusConfig: newConfig,
+      simState: nextState
+    });
+  },
 
   startExperiment: () => {
     const { addEvent, runStatus } = get();
@@ -235,6 +267,14 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
   initSimulation: (materialId: MaterialId = 'copper') => {
     const mat = MATERIALS[materialId] || MATERIALS.copper;
     const solver = new Thermal1DSolver(mat);
+    const { apparatusConfig } = get();
+    if (apparatusConfig) {
+      solver.setApparatusDimensions(
+        apparatusConfig.rodDiameterMm / 1000,
+        apparatusConfig.rodLengthCm / 100,
+        apparatusConfig.heaterResistanceR
+      );
+    }
     const simState = solver.step(0.01);
     
     set({
@@ -267,8 +307,8 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
   },
 
   setCurrent: (amps: number) => {
-    const r = APPARATUS_CONFIG.heaterResistanceR;
-    const maxAmps = APPARATUS_CONFIG.maxVoltage / r; // 0.80 A for 12V / 15 ohms
+    const r = get().apparatusConfig.heaterResistanceR;
+    const maxAmps = APPARATUS_CONFIG.maxVoltage / r; // e.g. 12V / R
     const clampedAmps = Math.max(0, Math.min(maxAmps, amps));
     get().setVoltage(clampedAmps * r);
   },

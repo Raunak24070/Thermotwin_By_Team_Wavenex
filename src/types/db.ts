@@ -175,6 +175,11 @@ export interface ExperimentSubmissionResult {
   isCertifiedRealLab?: boolean;
   gradeScore?: number;
   
+  // Target Faculty / Routing
+  targetTeacherId?: string;
+  targetTeacherEmail?: string;
+  targetClassCode?: string;
+
   // Review Status
   reviewStatus: 'PENDING' | 'REVIEWED';
   teacherFeedback?: string;

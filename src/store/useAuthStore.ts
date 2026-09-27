@@ -29,42 +29,12 @@ interface AuthState {
   logout: () => void;
 }
 
-const INITIAL_ACCOUNTS: (UserProfile & { password?: string })[] = [
-  {
-    id: 'user-std-101',
-    name: 'Alex Rivera',
-    email: 'alex@student.edu',
-    password: 'password123',
-    role: 'STUDENT',
-    institution: 'Institute of Thermal Technology',
-    department: 'Mechanical Engineering (3rd Year)',
-    studentIdNumber: '2026-ME-042',
-    classId: 'class-thermo-101',
-    joinedDate: 'September 2026',
-    bio: 'Passionate engineering student specializing in heat transfer, thermodynamics, and physical material simulations.',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'
-  },
-  {
-    id: 'user-tch-505',
-    name: 'Prof. David Vance',
-    email: 'vance@teacher.edu',
-    password: 'password123',
-    role: 'TEACHER',
-    institution: 'Institute of Thermal Technology',
-    department: 'Department of Thermal Sciences',
-    teacherIdNumber: 'FAC-THERMO-99',
-    joinedDate: 'August 2026',
-    bio: 'Professor of Heat & Mass Transfer. Leading digital laboratory innovation and 3D simulation platforms.',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80'
-  }
-];
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
-      registeredUsers: INITIAL_ACCOUNTS,
+      registeredUsers: [],
 
       loginUser: (email: string, password?: string) => {
         const { registeredUsers } = get();
@@ -177,7 +147,7 @@ export const useAuthStore = create<AuthState>()(
       }
     }),
     {
-      name: 'thermotwin-auth-v3'
+      name: 'thermotwin-auth-v4'
     }
   )
 );

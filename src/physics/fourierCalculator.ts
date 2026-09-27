@@ -28,10 +28,11 @@ export function performFourierAnalysis(
   tOutlet: number,
   flowRateLmin: number,
   refK: number,
-  steadyStateStatus: string
+  steadyStateStatus: string,
+  customArea?: number
 ): FourierAnalysisResult {
   const powerW = voltage * current;
-  const area = APPARATUS_CONFIG.crossSectionArea;
+  const area = customArea && customArea > 0 ? customArea : APPARATUS_CONFIG.crossSectionArea;
   const cpWater = APPARATUS_CONFIG.waterSpecificHeatCp; // 4184 J/(kg·K)
   const rhoWater = APPARATUS_CONFIG.waterDensityRho;     // 1000 kg/m³
   
