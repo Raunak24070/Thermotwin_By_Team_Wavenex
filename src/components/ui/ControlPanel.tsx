@@ -190,18 +190,18 @@ export const ControlPanel: React.FC = () => {
           <Eye className="w-3.5 h-3.5 text-emerald-400" />
           3D Visualization Mode
         </label>
-        <div className="grid grid-cols-3 gap-1.5">
-          {(['normal', 'thermal', 'cutaway'] as ViewMode[]).map((mode) => (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          {(['normal', 'thermal', 'heatflow', 'cutaway'] as ViewMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`py-1.5 px-2 rounded-lg text-xs font-bold uppercase transition-all border ${
+              className={`py-1.5 px-1.5 rounded-lg text-[11px] font-bold uppercase transition-all border cursor-pointer text-center ${
                 viewMode === mode
-                  ? 'bg-emerald-500/10 border-emerald-500/80 text-emerald-300 shadow-md'
+                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-md'
                   : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
               }`}
             >
-              {mode}
+              {mode === 'heatflow' ? 'Flux' : mode}
             </button>
           ))}
         </div>

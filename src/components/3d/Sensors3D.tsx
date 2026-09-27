@@ -134,6 +134,18 @@ export const Sensors3D: React.FC<Sensors3DProps> = ({
               </mesh>
             )}
 
+            {/* Axial position marker collar on the rod surface */}
+            {(isSelected || hoveredSensorId === sensor.id) && sensor.type === 'rod' && (
+              <mesh position={[0, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+                <torusGeometry args={[0.258, 0.014, 12, 32]} />
+                <meshBasicMaterial
+                  color={isSelected ? '#fbbf24' : '#38bdf8'}
+                  transparent
+                  opacity={0.9}
+                />
+              </mesh>
+            )}
+
             {/* 3. Dark Backdrop Plate for Label Chip */}
             <mesh
               position={[0, sensor.type === 'rod' ? labelPosY + 0.28 : labelPosY, 0]}

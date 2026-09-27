@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
@@ -18,13 +18,33 @@ export const CoolingJacket3D: React.FC<CoolingJacket3DProps> = ({
   t9: propT9 = 20.0,
   position = [1.8, 0, 0]
 }) => {
-  const waterFlowMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const jacketGlassMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
   const outletPipeMaterialRef = useRef<THREE.MeshStandardMaterial>(null);
-  const particleGroupRef = useRef<THREE.Group>(null);
+  const waterFlowPointsRef = useRef<THREE.Points>(null);
+
+  // Generate circulating water particles flowing from Inlet (Bottom T8) -> Swirling Jacket -> Outlet (Top T9)
+  const { particlePositions, particleInitialProgress } = useMemo(() => {
+    const count = 60;
+    const positions = new Float32Array(count * 3);
+    const progress = new Float32Array(count);
+
+    for (let i = 0; i < count; i++) {
+      progress[i] = Math.random(); // 0.0 (inlet) to 1.0 (outlet)
+      // Path calculation based on progress
+      const p = progress[i];
+      let x = (Math.random() - 0.5) * 0.35;
+      let y = -0.65 + p * 1.30;
+      let z = Math.sin(p * Math.PI * 3 + i) * 0.32;
+      positions[i * 3]     = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+    }
+    return { particlePositions: positions, particleInitialProgress: progress };
+  }, []);
+
+  const progressRef = useRef<Float32Array>(particleInitialProgress);
 
   useFrame((_, delta) => {
-    // Read live physics state directly to guarantee instant synchronization
     const liveSim = usePhysicsStore.getState().simState;
     const flow = liveSim ? liveSim.waterFlowLmin : propFlow;
     const t8 = liveSim ? liveSim.sensors.t8 : propT8;
@@ -32,50 +52,61 @@ export const CoolingJacket3D: React.FC<CoolingJacket3DProps> = ({
 
     const isActiveFlow = flow > 0.02;
     const normFlow = Math.min(1.0, Math.max(0.0, flow / 3.0));
+    const deltaT = Math.max(0.0, t9 - t8);
 
-    // 1. Particle animation: speed strictly scales with flow rate; stops completely at 0
-    if (particleGroupRef.current) {
+    // 1. Water Particles Moving Upwards (T8 Inlet -> Jacket -> T9 Outlet)
+    if (waterFlowPointsRef.current) {
       if (isActiveFlow) {
-        particleGroupRef.current.rotation.x += delta * (flow * 3.2);
-        particleGroupRef.current.visible = true;
+        waterFlowPointsRef.current.visible = true;
+        const geom = waterFlowPointsRef.current.geometry;
+        const posAttr = geom.attributes.position as THREE.BufferAttribute;
+        const arr = posAttr.array as Float32Array;
+        const progressArr = progressRef.current;
+        const pCount = arr.length / 3;
+
+        // Velocity strictly scales with rotameter flow rate
+        const flowSpeed = (0.2 + normFlow * 1.4) * delta;
+
+        for (let i = 0; i < pCount; i++) {
+          progressArr[i] += flowSpeed;
+          if (progressArr[i] > 1.0) {
+            progressArr[i] -= 1.0;
+          }
+
+          const p = progressArr[i];
+          // Spiral streamline trajectory around the metallic rod
+          const spiralAngle = p * Math.PI * 4.0 + i;
+          const radius = 0.32 + Math.sin(i * 1.5) * 0.06;
+
+          arr[i * 3]     = (Math.sin(spiralAngle) * 0.25) + ((i % 5) - 2) * 0.04;
+          arr[i * 3 + 1] = -0.65 + p * 1.30; // Flow direction: bottom (-0.65) to top (+0.65)
+          arr[i * 3 + 2] = Math.cos(spiralAngle) * radius;
+        }
+
+        posAttr.needsUpdate = true;
       } else {
-        particleGroupRef.current.visible = false;
+        waterFlowPointsRef.current.visible = false;
       }
     }
 
-    // 2. Water Stream Material Opacity & Turbidity
-    if (waterFlowMaterialRef.current) {
-      if (!isActiveFlow) {
-        waterFlowMaterialRef.current.opacity = 0.0;
-      } else {
-        waterFlowMaterialRef.current.opacity = 0.35 + normFlow * 0.45;
-        waterFlowMaterialRef.current.emissiveIntensity = 0.3 + normFlow * 0.5;
-      }
-    }
-
-    // 3. Jacket outer cylinder appearance (drained vs active water-filled)
+    // 2. Borosilicate Glass Jacket Visuals (Drained vs Active Flow)
     if (jacketGlassMaterialRef.current) {
       if (!isActiveFlow) {
-        // Dry empty glass/acrylic jacket
-        jacketGlassMaterialRef.current.color = new THREE.Color('#64748b');
-        jacketGlassMaterialRef.current.opacity = 0.25;
+        jacketGlassMaterialRef.current.color = new THREE.Color('#475569');
+        jacketGlassMaterialRef.current.opacity = 0.22;
       } else {
-        // Filled with circulating coolant
+        // Active water coolant stream
         jacketGlassMaterialRef.current.color = new THREE.Color('#0284c7');
-        jacketGlassMaterialRef.current.opacity = 0.45 + normFlow * 0.25;
+        jacketGlassMaterialRef.current.opacity = 0.35 + normFlow * 0.35;
       }
     }
 
-    // 4. Differential Thermal Coloration: Inlet (T8) vs Outlet (T9)
-    // Delta T = T9 - T8 (heat carried away by cooling water)
+    // 3. Differential Thermal Coloration on Outlet Pipe (T9 responds to extracted heat ΔTw)
     if (outletPipeMaterialRef.current) {
-      const deltaT = Math.max(0.0, t9 - t8);
-      // Normalized temperature rise (0°C to ~8°C max rise in standard experiment)
-      const normDeltaT = Math.min(1.0, deltaT / 8.0);
-
-      const coldWaterBlue = new THREE.Color('#0284c7'); // 20°C
-      const warmTeal = new THREE.Color('#0d9488');       // ~23°C
-      const heatedAmber = new THREE.Color('#d97706');    // ~28°C+
+      const normDeltaT = Math.min(1.0, deltaT / 6.0); // 0 to 6°C rise
+      const coldWaterBlue = new THREE.Color('#0284c7');
+      const warmTeal = new THREE.Color('#0d9488');
+      const heatedAmber = new THREE.Color('#f59e0b');
 
       let outletColor: THREE.Color;
       if (normDeltaT < 0.5) {
@@ -86,13 +117,13 @@ export const CoolingJacket3D: React.FC<CoolingJacket3DProps> = ({
 
       outletPipeMaterialRef.current.color = outletColor;
       outletPipeMaterialRef.current.emissive = outletColor;
-      outletPipeMaterialRef.current.emissiveIntensity = isActiveFlow ? 0.2 + normDeltaT * 0.5 : 0.05;
+      outletPipeMaterialRef.current.emissiveIntensity = isActiveFlow ? (0.2 + normDeltaT * 0.5) : 0.05;
     }
   });
 
   return (
     <group position={position}>
-      {/* Outer Cooling Jacket Transparent Blue Housing */}
+      {/* Outer Cooling Jacket Cylinder (Transparent Borosilicate Glass) */}
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
         <cylinderGeometry args={[0.48, 0.48, 0.8, 32]} />
         <meshStandardMaterial
@@ -100,78 +131,75 @@ export const CoolingJacket3D: React.FC<CoolingJacket3DProps> = ({
           color="#64748b"
           transparent
           opacity={0.25}
-          roughness={0.15}
-          metalness={0.7}
+          roughness={0.1}
+          metalness={0.8}
         />
       </mesh>
 
-      {/* Internal Rod Interface Seal Collars */}
+      {/* Internal Rod Interface Neoprene Gasket Seals */}
       <mesh position={[-0.4, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
         <ringGeometry args={[0.25, 0.48, 32]} />
-        <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.8} />
+        <meshStandardMaterial color="#1e293b" roughness={0.6} metalness={0.5} />
       </mesh>
       <mesh position={[0.4, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
         <ringGeometry args={[0.25, 0.48, 32]} />
-        <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.8} />
+        <meshStandardMaterial color="#1e293b" roughness={0.6} metalness={0.5} />
       </mesh>
+
+      {/* Circulating Water Stream Particles (Direction: T8 In -> Rod -> T9 Out) */}
+      <points ref={waterFlowPointsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[particlePositions, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.04}
+          color="#38bdf8"
+          transparent
+          opacity={0.8}
+          blending={THREE.AdditiveBlending}
+        />
+      </points>
 
       {/* Water Inlet Pipe (Bottom / T8 - Cool Water Inflow) */}
       <group position={[0, -0.65, 0]}>
         <mesh>
-          <cylinderGeometry args={[0.08, 0.08, 0.6, 16]} />
+          <cylinderGeometry args={[0.075, 0.075, 0.55, 16]} />
           <meshStandardMaterial
             color="#0284c7"
             emissive="#0284c7"
-            emissiveIntensity={0.2}
+            emissiveIntensity={0.25}
             metalness={0.7}
             roughness={0.2}
           />
         </mesh>
         {/* Hose Connector Barb */}
-        <mesh position={[0, -0.3, 0]}>
-          <torusGeometry args={[0.09, 0.02, 12, 16]} />
-          <meshStandardMaterial color="#d97706" metalness={0.9} roughness={0.2} />
+        <mesh position={[0, -0.28, 0]}>
+          <torusGeometry args={[0.085, 0.02, 12, 16]} />
+          <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.2} />
         </mesh>
       </group>
 
       {/* Water Outlet Pipe (Top / T9 - Warm Water Outflow with Live Delta T) */}
       <group position={[0, 0.65, 0]}>
         <mesh>
-          <cylinderGeometry args={[0.08, 0.08, 0.6, 16]} />
+          <cylinderGeometry args={[0.075, 0.075, 0.55, 16]} />
           <meshStandardMaterial
             ref={outletPipeMaterialRef}
             color="#0284c7"
+            emissive="#0284c7"
+            emissiveIntensity={0.25}
             metalness={0.7}
             roughness={0.2}
           />
         </mesh>
         {/* Hose Connector Barb */}
-        <mesh position={[0, 0.3, 0]}>
-          <torusGeometry args={[0.09, 0.02, 12, 16]} />
-          <meshStandardMaterial color="#d97706" metalness={0.9} roughness={0.2} />
+        <mesh position={[0, 0.28, 0]}>
+          <torusGeometry args={[0.085, 0.02, 12, 16]} />
+          <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.2} />
         </mesh>
-      </group>
-
-      {/* Internal Swirling Water Stream Particle Rings */}
-      <group ref={particleGroupRef} visible={false}>
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          const r = 0.36;
-          const xOffset = ((i % 3) - 1) * 0.2;
-          return (
-            <mesh key={i} position={[xOffset, Math.sin(angle) * r, Math.cos(angle) * r]}>
-              <sphereGeometry args={[0.038, 12, 12]} />
-              <meshStandardMaterial
-                ref={i === 0 ? waterFlowMaterialRef : undefined}
-                color="#38bdf8"
-                emissive="#0284c7"
-                emissiveIntensity={0.4}
-                transparent
-                opacity={0.65}
-              />
-            </mesh>
-          );
-        })}
       </group>
     </group>
   );

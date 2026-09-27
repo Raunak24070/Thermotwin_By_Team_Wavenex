@@ -1,8 +1,9 @@
 'use client';
 
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useRef, useMemo } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows } from '@react-three/drei';
+import * as THREE from 'three';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 import { MetallicRod3D } from './MetallicRod3D';
 import { Heater3D } from './Heater3D';
@@ -13,9 +14,88 @@ import { Meters3D } from './Meters3D';
 import { Sensors3D } from './Sensors3D';
 import { LabBench3D } from './LabBench3D';
 import { ApparatusLabels3D } from './ApparatusLabels3D';
+import { HeatFlowParticles3D } from './HeatFlowParticles3D';
 import { Apparatus3DHUD } from '../ui/Apparatus3DHUD';
-import { Flame, Droplets, Layers, Thermometer, Gauge, Tag, X } from 'lucide-react';
+import { Flame, Droplets, Layers, Thermometer, Gauge, Tag, X, Wind } from 'lucide-react';
 import { SENSORS } from '@/physics/sensors';
+
+// Smooth Cinematic Camera Controller responding to component inspection & sensor selection
+function CameraController({
+  inspectedPart,
+  selectedSensorId
+}: {
+  inspectedPart: string | null;
+  selectedSensorId: string | null;
+}) {
+  const { camera } = useThree();
+  const controlsRef = useRef<any>(null);
+
+  const { targetPos, targetLookAt } = useMemo(() => {
+    if (selectedSensorId) {
+      const sensor = SENSORS.find((s) => s.id === selectedSensorId);
+      const posX = sensor && sensor.type === 'rod' ? -1.6 + (sensor.positionX / 0.5) * 3.2 : 1.8;
+      return {
+        targetPos: new THREE.Vector3(posX, 0.9, 2.5),
+        targetLookAt: new THREE.Vector3(posX, 0.35, 0)
+      };
+    }
+
+    switch (inspectedPart) {
+      case 'HEATER':
+        return {
+          targetPos: new THREE.Vector3(-2.3, 0.9, 2.5),
+          targetLookAt: new THREE.Vector3(-2.3, 0.15, 0)
+        };
+      case 'COOLING_JACKET':
+        return {
+          targetPos: new THREE.Vector3(1.8, 0.8, 2.5),
+          targetLookAt: new THREE.Vector3(1.8, 0, 0)
+        };
+      case 'METERS':
+        return {
+          targetPos: new THREE.Vector3(-2.3, 1.8, 2.2),
+          targetLookAt: new THREE.Vector3(-2.3, 1.4, 0)
+        };
+      case 'THERMOCOUPLES':
+        return {
+          targetPos: new THREE.Vector3(0, 1.5, 3.4),
+          targetLookAt: new THREE.Vector3(0, 0.35, 0)
+        };
+      case 'ROD':
+        return {
+          targetPos: new THREE.Vector3(0, 1.3, 3.8),
+          targetLookAt: new THREE.Vector3(0, 0, 0)
+        };
+      default:
+        // Default home laboratory perspective
+        return {
+          targetPos: new THREE.Vector3(0, 1.8, 5.2),
+          targetLookAt: new THREE.Vector3(0, 0, 0)
+        };
+    }
+  }, [inspectedPart, selectedSensorId]);
+
+  useFrame((_, delta) => {
+    const factor = Math.min(1.0, delta * 3.2);
+    camera.position.lerp(targetPos, factor);
+    if (controlsRef.current) {
+      controlsRef.current.target.lerp(targetLookAt, factor);
+      controlsRef.current.update();
+    }
+  });
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      enableDamping
+      dampingFactor={0.05}
+      maxPolarAngle={Math.PI / 2 + 0.1}
+      minDistance={1.8}
+      maxDistance={9.0}
+    />
+  );
+}
 
 export const LabCanvas: React.FC = () => {
   const { 
@@ -24,21 +104,21 @@ export const LabCanvas: React.FC = () => {
     selectedSensorId, 
     setSelectedSensor,
     inspectedPart,
-    setInspectedPart
+    setInspectedPart,
+    heatParticlesEnabled
   } = usePhysicsStore();
 
   const [show3DLabels, setShow3DLabels] = React.useState<boolean>(true);
   const [hoveredPart, setHoveredPart] = React.useState<string | null>(null);
 
   // Contextual descriptions shown on hover for educational clarity
-  const PART_CONTEXT: Record<string, { title: string; desc: string; color: string }> = {
-    HEATER:         { title: 'Electrical Heater', desc: 'Provides controlled heat input Q = V²/R (Joule heating). Current flows through nichrome resistor band.', color: 'amber' },
-    COOLING_JACKET: { title: 'Water Cooling Jacket', desc: 'Removes heat from the rod via forced convection. ΔT_water = T9 – T8 measures heat extracted.', color: 'cyan' },
-    ROD:            { title: 'Metallic Specimen Rod', desc: 'Heat conducts from heater (hot end) to cooler (cold end) following Fourier\'s Law: Q = –kA(dT/dx).', color: 'indigo' },
-    THERMOCOUPLES:  { title: 'Type-K Thermocouples T1–T7', desc: 'Measure temperature at 5 cm intervals. Click any probe to see its exact position and reading.', color: 'rose' },
-    METERS:         { title: 'Digital Voltmeter & Ammeter', desc: 'Measure electrical power delivered to heater: P = V × I = V²/R watts.', color: 'emerald' },
+  const PART_CONTEXT: Record<string, { title: string; desc: string }> = {
+    HEATER:         { title: 'Electrical Dimmer-Stat Heater', desc: 'Joule heating element generating thermal energy Q = V × I. Nichrome coil temperature rises with voltage.' },
+    COOLING_JACKET: { title: 'Water Cooling Jacket (Heat Sink)', desc: 'Forced convection water loop removing heat at cold junction. ΔTw = T9 – T8 measures energy extracted.' },
+    ROD:            { title: 'Metallic Specimen Rod (1D Conduction)', desc: 'Fourier conduction medium: Q = –kA(dT/dx). Temperature front propagates from heater towards cooling jacket.' },
+    THERMOCOUPLES:  { title: 'Type-K Thermocouples (T1–T7)', desc: 'Measure axial temperature gradient at 5 cm intervals. Click any probe to inspect its exact position.' },
+    METERS:         { title: 'Digital Dimmer-Stat Instrumentation', desc: 'Displays heater voltage, current, and electrical power input P = V × I watts.' },
   };
-
 
   const selectedSensor = selectedSensorId ? SENSORS.find((s) => s.id === selectedSensorId) : null;
   const selectedSensorTemp = selectedSensorId 
@@ -51,7 +131,7 @@ export const LabCanvas: React.FC = () => {
       <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
         <span className="px-3 py-1 bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-lg text-xs font-mono font-semibold tracking-wide backdrop-blur-md shadow-lg flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          3D VIEW: {viewMode.toUpperCase()}
+          3D VIEW: {viewMode === 'heatflow' ? 'HEAT FLUX' : viewMode.toUpperCase()}
         </span>
 
         <button
@@ -73,46 +153,36 @@ export const LabCanvas: React.FC = () => {
           INSPECT:
         </span>
         {([
-          { id: 'HEATER', icon: Flame, label: 'Heater', color: 'amber' },
-          { id: 'COOLING_JACKET', icon: Droplets, label: 'Cooler', color: 'cyan' },
-          { id: 'ROD', icon: Layers, label: 'Rod', color: 'indigo' },
-          { id: 'THERMOCOUPLES', icon: Thermometer, label: 'Sensors', color: 'rose' },
-          { id: 'METERS', icon: Gauge, label: 'Meters', color: 'emerald' },
-        ] as const).map(({ id, icon: Icon, label, color }) => (
-          <button
-            key={id}
-            onClick={() => setInspectedPart(inspectedPart === id ? null : id as any)}
-            onMouseEnter={() => setHoveredPart(id)}
-            onMouseLeave={() => setHoveredPart(null)}
-            className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md ${
-              inspectedPart === id
-                ? {
-                    HEATER:         'bg-amber-500 text-slate-950 border-amber-400',
-                    COOLING_JACKET: 'bg-cyan-500 text-slate-950 border-cyan-400',
-                    ROD:            'bg-indigo-500 text-slate-950 border-indigo-400',
-                    THERMOCOUPLES:  'bg-rose-500 text-slate-950 border-rose-400',
-                    METERS:         'bg-emerald-500 text-slate-950 border-emerald-400',
-                  }[id]
-                : {
-                    HEATER:         'bg-slate-900/90 text-amber-300 border-slate-700/80 hover:bg-slate-800',
-                    COOLING_JACKET: 'bg-slate-900/90 text-cyan-300 border-slate-700/80 hover:bg-slate-800',
-                    ROD:            'bg-slate-900/90 text-indigo-300 border-slate-700/80 hover:bg-slate-800',
-                    THERMOCOUPLES:  'bg-slate-900/90 text-rose-300 border-slate-700/80 hover:bg-slate-800',
-                    METERS:         'bg-slate-900/90 text-emerald-300 border-slate-700/80 hover:bg-slate-800',
-                  }[id]
-            }`}
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
-          </button>
-        ))}
-
+          { id: 'HEATER', icon: Flame, label: 'Heater' },
+          { id: 'COOLING_JACKET', icon: Droplets, label: 'Cooler' },
+          { id: 'ROD', icon: Layers, label: 'Rod' },
+          { id: 'THERMOCOUPLES', icon: Thermometer, label: 'Sensors' },
+          { id: 'METERS', icon: Gauge, label: 'Meters' },
+        ] as const).map(({ id, icon: Icon, label }) => {
+          const isInspected = inspectedPart === id;
+          return (
+            <button
+              key={id}
+              onClick={() => setInspectedPart(isInspected ? null : id as any)}
+              onMouseEnter={() => setHoveredPart(id)}
+              onMouseLeave={() => setHoveredPart(null)}
+              className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md cursor-pointer ${
+                isInspected
+                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
+                  : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Part hover context tooltip */}
       {hoveredPart && PART_CONTEXT[hoveredPart] && (
-        <div className="absolute top-12 right-3 z-20 max-w-[240px] bg-slate-900/95 border border-slate-700 rounded-lg p-2.5 shadow-2xl backdrop-blur-md pointer-events-none">
-          <div className="text-[11px] font-bold text-slate-100 mb-1">{PART_CONTEXT[hoveredPart].title}</div>
+        <div className="absolute top-12 right-3 z-20 max-w-[260px] bg-slate-900/95 border border-slate-700 rounded-lg p-2.5 shadow-2xl backdrop-blur-md pointer-events-none animate-in fade-in duration-150">
+          <div className="text-[11px] font-bold text-amber-300 mb-1">{PART_CONTEXT[hoveredPart].title}</div>
           <div className="text-[10px] font-mono text-slate-400 leading-relaxed">{PART_CONTEXT[hoveredPart].desc}</div>
         </div>
       )}
@@ -179,10 +249,10 @@ export const LabCanvas: React.FC = () => {
         <pointLight position={[3, -2, 2]} intensity={0.6} color="#55aaff" />
 
         <Suspense fallback={null}>
-          {/* Realistic Laboratory Slate Table & Heavy Mounting Clamps */}
+          {/* Laboratory Slate Table & Mounts */}
           <LabBench3D />
 
-          {/* 3D Component Annotations & Leader Labels */}
+          {/* 3D Component Annotations */}
           <ApparatusLabels3D visible={show3DLabels} />
 
           <group position={[0, 0, 0]}>
@@ -241,6 +311,9 @@ export const LabCanvas: React.FC = () => {
                 onSelectSensor={setSelectedSensor}
               />
             </group>
+
+            {/* Heat Flow Flux Particles (Active in heatflow/thermal mode or when enabled) */}
+            <HeatFlowParticles3D visible={viewMode === 'heatflow' || heatParticlesEnabled} />
           </group>
 
           {/* Laboratory Bench Shadow Plane */}
@@ -253,14 +326,10 @@ export const LabCanvas: React.FC = () => {
           />
         </Suspense>
 
-        {/* Orbit Camera Controls */}
-        <OrbitControls
-          makeDefault
-          enableDamping
-          dampingFactor={0.05}
-          maxPolarAngle={Math.PI / 2 + 0.1}
-          minDistance={2.5}
-          maxDistance={9.0}
+        {/* Dynamic Smooth Camera Controller */}
+        <CameraController
+          inspectedPart={inspectedPart}
+          selectedSensorId={selectedSensorId}
         />
       </Canvas>
     </div>

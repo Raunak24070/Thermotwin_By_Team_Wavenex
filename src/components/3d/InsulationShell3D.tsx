@@ -15,19 +15,19 @@ export const InsulationShell3D: React.FC<InsulationShell3DProps> = ({
   rodLength = 3.2,
   outerRadius = 0.55
 }) => {
-  if (viewMode === 'thermal') {
-    // Hide solid insulation shell completely in Thermal mode so the continuous temperature gradient is 100% visible
+  if (viewMode === 'thermal' || viewMode === 'heatflow') {
+    // Hide solid insulation shell completely in Thermal & Heat Flow modes so the continuous temperature gradient is 100% visible
     return null;
   }
 
   const isCutaway = viewMode === 'cutaway';
 
-  // In Normal mode, apparatus has an observation cutout along the top (where thermocouples enter),
+  // In Normal mode, apparatus has a wide observation cutout along the top-front (where thermocouples enter),
   // covered by a transparent borosilicate inspection shield, ensuring the metal rod and its thermal response
   // are clearly visible from standard camera angles.
   // In Cutaway mode, the cutaway angle is wide (180 degrees) for internal cross-sectional inspection.
-  const thetaStart = isCutaway ? Math.PI * 0.25 : Math.PI * 0.18;
-  const thetaLength = isCutaway ? Math.PI * 1.5 : Math.PI * 1.64;
+  const thetaStart = isCutaway ? Math.PI * 0.25 : Math.PI * 0.22;
+  const thetaLength = isCutaway ? Math.PI * 1.5 : Math.PI * 1.45;
 
   return (
     <group position={[-0.2, 0, 0]}>

@@ -6,7 +6,7 @@ import { MATERIALS, APPARATUS_CONFIG } from '../physics/materials';
 import { Thermal1DSolver } from '../physics/1dRodSolver';
 import { ExperimentEvent } from '../types/db';
 
-export type ViewMode = 'normal' | 'thermal' | 'cutaway';
+export type ViewMode = 'normal' | 'thermal' | 'heatflow' | 'cutaway';
 
 interface PhysicsStoreState {
   // Solver Instance
@@ -180,7 +180,7 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 3,
-        demoStepDescription: 'Step 3/6: Setting electrical heater voltage to 10.0 V (Heat Power = 20.0 W)...' 
+        demoStepDescription: 'Step 3/6: Setting electrical heater voltage to 10.0 V (Heat Power = 6.7 W, I = 0.67 A)...' 
       });
       setVoltage(10.0);
     }, 3000));
