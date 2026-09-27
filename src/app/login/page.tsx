@@ -12,19 +12,12 @@ export default function LoginPage() {
   const { loginUser } = useAuthStore();
 
   const [roleTab, setRoleTab] = useState<UserRole>('STUDENT');
-  const [email, setEmail] = useState('alex@student.edu');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleRoleTabChange = (role: UserRole) => {
     setRoleTab(role);
-    if (role === 'STUDENT') {
-      setEmail('alex@student.edu');
-      setPassword('password123');
-    } else {
-      setEmail('vance@teacher.edu');
-      setPassword('password123');
-    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
