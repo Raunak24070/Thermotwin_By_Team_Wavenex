@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #090d16;
+    color: #f1f5f9;
+  }
+
+  /* Improved heading hierarchy */
+  h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 900; letter-spacing: -0.03em; }
+  h2 { font-size: 1.25rem;  line-height: 1.75rem; font-weight: 800; letter-spacing: -0.02em; }
+  h3 { font-size: 0.9375rem; line-height: 1.375rem; font-weight: 700; letter-spacing: -0.01em; }
+}
+
+/* Custom scrollbars for data tables and logs */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Thermal indicator bar base */
+.thermal-bar {
+  height: 3px;
+  border-radius: 2px;
+  transition: background 0.8s ease;
+}
+
+/* Heat shimmer animation for hero */
+@keyframes heat-shimmer {
+  0%   { transform: translateX(0) scaleY(1);   opacity: 0.6; }
+  25%  { transform: translateX(4px) scaleY(1.08); opacity: 0.8; }
+  50%  { transform: translateX(-3px) scaleY(0.95); opacity: 0.5; }
+  75%  { transform: translateX(5px) scaleY(1.05); opacity: 0.75; }
+  100% { transform: translateX(0) scaleY(1);   opacity: 0.6; }
+}
+
+.heat-shimmer {
+  animation: heat-shimmer 3.5s ease-in-out infinite;
+}
+
+/* Temperature value flash on update */
+@keyframes temp-flash {
+  0%   { color: #f8fafc; }
+  30%  { color: #fbbf24; }
+  100% { color: #f8fafc; }
+}
+
+.temp-updated {
+  animation: temp-flash 0.6s ease-out;
+}
+
+/* Subtle section reveal */
+@keyframes section-reveal {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.reveal-on-mount {
+  animation: section-reveal 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Staggered card entrance */
+.card-stagger-1 { animation-delay: 0ms; }
+.card-stagger-2 { animation-delay: 60ms; }
+.card-stagger-3 { animation-delay: 120ms; }
+.card-stagger-4 { animation-delay: 180ms; }
+.card-stagger-5 { animation-delay: 240ms; }
+.card-stagger-6 { animation-delay: 300ms; }
+.card-stagger-7 { animation-delay: 360ms; }
+.card-stagger-8 { animation-delay: 420ms; }
+.card-stagger-9 { animation-delay: 480ms; }
+
+/* Smooth focus ring improvements */
+:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+  border-radius: 6px;
+}

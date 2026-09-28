@@ -1,0 +1,360 @@
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { 
+  BookOpen, 
+  Thermometer, 
+  Zap, 
+  Droplets, 
+  BarChart3, 
+  CheckCircle, 
+  AlertCircle, 
+  FlaskConical,
+  ArrowRight,
+  ShieldAlert,
+  Flame,
+  Gauge,
+  Sliders,
+  Scale
+} from 'lucide-react';
+import { MATERIALS, APPARATUS_CONFIG } from '@/physics/materials';
+
+export default function ExperimentGuidePage() {
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 py-10 px-4 md:px-8">
+      <div className="max-w-6xl mx-auto flex flex-col gap-8">
+        
+        {/* Header Hero */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
+          <div className="flex flex-col gap-3 relative z-10 max-w-2xl">
+            <div className="flex items-center gap-2 text-amber-400 font-mono text-xs font-bold uppercase tracking-wider">
+              <FlaskConical className="w-4 h-4" />
+              YCCE September 2026 Academic Specification &bull; Thermal Conduction
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black text-slate-100 tracking-tight">
+              ThermoTwin Experiment Reference &amp; Operating Guide
+            </h1>
+            <p className="text-slate-300 text-sm leading-relaxed">
+              Complete theoretical foundation, user-configurable apparatus parameters, thermocouple sensor locations, physical equations, and expected results for the <strong>Determination of Thermal Conductivity of a Metallic Rod</strong>.
+            </p>
+            <div className="flex items-center gap-3 pt-2">
+              <Link
+                to="/student/experiment/thermal_conductivity"
+                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all cursor-pointer"
+              >
+                Launch Virtual Lab <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/login"
+                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition-all"
+              >
+                Login / Register
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-slate-950/80 border border-amber-500/30 rounded-2xl p-5 flex flex-col gap-3 shadow-xl shrink-0 w-full md:w-72">
+            <span className="text-[11px] font-mono text-amber-400 font-bold uppercase flex items-center gap-1.5">
+              <Flame className="w-3.5 h-3.5" /> Governing Equation
+            </span>
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-center">
+              <div className="font-mono text-lg font-black text-amber-300">
+                Q = &minus;k &bull; A &bull; (dT/dx)
+              </div>
+              <div className="text-[10px] font-mono text-slate-400 mt-1">
+                Fourier&apos;s Law of Conduction
+              </div>
+            </div>
+            <div className="text-[11px] font-mono text-slate-400 flex flex-col gap-1 border-t border-slate-800 pt-2">
+              <div>&bull; k = Thermal Conductivity [W/(m&middot;K)]</div>
+              <div>&bull; A = Cross-sectional Area [m&sup2;]</div>
+              <div>&bull; dT/dx = Temperature Gradient [&deg;C/m]</div>
+              <div>&bull; Q = Heat Flow Rate [W]</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 1: Objective & Experiment Overview */}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+            <BookOpen className="w-5 h-5 text-amber-400" />
+            <h2 className="font-bold text-lg text-slate-100">1. Experiment Objective &amp; Principle</h2>
+          </div>
+          <p className="text-slate-300 text-sm leading-relaxed">
+            The objective of this laboratory experiment is to determine the <strong>thermal conductivity (k)</strong> of a cylindrical metallic test rod under one-dimensional steady-state heat conduction. One end of the rod is heated uniformly by a regulated electric band heater, while the opposite end is continuously cooled by a constant-flow cooling water jacket.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+              <span className="text-xs font-bold text-amber-400 font-mono">1. Heat Influx (Heater End)</span>
+              <p className="text-xs text-slate-400">
+                Electric heat Q_in = V &times; I is generated by the band heater. Heat travels axially along the test specimen toward the heat sink.
+              </p>
+            </div>
+            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+              <span className="text-xs font-bold text-cyan-400 font-mono">2. Heat Extraction (Water Jacket)</span>
+              <p className="text-xs text-slate-400">
+                Cooling water flows through the jacket at flow rate &omega;, absorbing heat Q_water = m_dot &times; Cp &times; (T9 &minus; T8) to maintain temperature gradient.
+              </p>
+            </div>
+            <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+              <span className="text-xs font-bold text-emerald-400 font-mono">3. Axial Conduction &amp; Gradient</span>
+              <p className="text-xs text-slate-400">
+                Seven thermocouple probes (T1 to T7) placed at 5 cm intervals record temperatures to calculate spatial linear gradient dT/dx.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Section 2: User-Configurable Apparatus Parameters */}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2.5">
+              <Sliders className="w-5 h-5 text-indigo-400" />
+              <h2 className="font-bold text-lg text-slate-100">2. Apparatus Parameters (User-Configurable)</h2>
+            </div>
+            <span className="text-[11px] font-mono text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+              Interactive In Virtual Lab
+            </span>
+          </div>
+          <p className="text-slate-300 text-sm">
+            In ThermoTwin, students can configure apparatus dimensions directly in the control panel. Modifying these values dynamically updates cross-sectional area, 1D FDTD finite-difference discretization, and Fourier calculations:
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase">
+                  <th className="py-2.5 pr-4">Parameter Name</th>
+                  <th className="py-2.5 pr-4">Symbol</th>
+                  <th className="py-2.5 pr-4">Default Value</th>
+                  <th className="py-2.5 pr-4">Allowed Range</th>
+                  <th className="py-2.5">Significance in Conduction</th>
+                </tr>
+              </thead>
+              <tbody className="font-mono text-slate-300 divide-y divide-slate-800/60">
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Rod Diameter</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">D</td>
+                  <td className="py-2.5 pr-4 text-amber-300 font-bold">25 mm (0.025 m)</td>
+                  <td className="py-2.5 pr-4 text-slate-400">10 &ndash; 50 mm</td>
+                  <td className="py-2.5 text-slate-400">Calculates cross-sectional area A = &pi;&times;(D/2)&sup2;. Area governs total heat flow.</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Cross-Sectional Area</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">A</td>
+                  <td className="py-2.5 pr-4 text-amber-300 font-bold">4.91 &times; 10&minus;4 m&sup2;</td>
+                  <td className="py-2.5 pr-4 text-slate-400">Auto-derived</td>
+                  <td className="py-2.5 text-slate-400">Denominator in Fourier&apos;s Law: k = Q / (A &middot; |dT/dx|)</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Rod Length</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">L</td>
+                  <td className="py-2.5 pr-4 text-amber-300 font-bold">50 cm (0.50 m)</td>
+                  <td className="py-2.5 pr-4 text-slate-400">20 &ndash; 100 cm</td>
+                  <td className="py-2.5 text-slate-400">Total length spanning heater end (x=0) to cooling jacket (x=L).</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Heater Resistance</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">R</td>
+                  <td className="py-2.5 pr-4 text-amber-300 font-bold">15.0 &Omega;</td>
+                  <td className="py-2.5 pr-4 text-slate-400">5.0 &ndash; 50.0 &Omega;</td>
+                  <td className="py-2.5 text-slate-400">Governs current draw I = V / R and input heat power P = V&sup2; / R.</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Max Heater Voltage</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">V_max</td>
+                  <td className="py-2.5 pr-4 text-amber-300 font-bold">12.0 V</td>
+                  <td className="py-2.5 pr-4 text-slate-400">0 &ndash; 12.0 V</td>
+                  <td className="py-2.5 text-slate-400">Student adjusts voltage; current updates according to Ohm&apos;s Law.</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Cooling Water Flow</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">&omega;</td>
+                  <td className="py-2.5 pr-4 text-cyan-300 font-bold">1.50 L/min</td>
+                  <td className="py-2.5 pr-4 text-slate-400">0 &ndash; 3.0 L/min</td>
+                  <td className="py-2.5 text-slate-400">Regulated via virtual needle valve and rotameter float.</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Water Specific Heat</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">Cp</td>
+                  <td className="py-2.5 pr-4 text-slate-300">4184 J/(kg&middot;K)</td>
+                  <td className="py-2.5 pr-4 text-slate-400">Constant</td>
+                  <td className="py-2.5 text-slate-400">Calorimetric constant for cooling circuit heat extraction.</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 pr-4 text-slate-100 font-bold">Ambient Temperature</td>
+                  <td className="py-2.5 pr-4 text-indigo-300">T_amb</td>
+                  <td className="py-2.5 pr-4 text-slate-300">20.0 &deg;C</td>
+                  <td className="py-2.5 pr-4 text-slate-400">Constant</td>
+                  <td className="py-2.5 text-slate-400">Initial specimen baseline and cooling water supply temperature.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Section 3: Thermocouple Locations (T1 to T9) */}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+            <Thermometer className="w-5 h-5 text-rose-400" />
+            <h2 className="font-bold text-lg text-slate-100">3. Thermocouple Sensor Layout (T1 to T9)</h2>
+          </div>
+          <p className="text-slate-300 text-sm">
+            The apparatus is equipped with 9 calibrated thermocouple probes positioned along the specimen and fluid lines:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { id: 'T1', pos: '0.05 m (5 cm)', role: 'Hot End Probe', desc: 'Located nearest to electric heater casing.' },
+              { id: 'T2', pos: '0.10 m (10 cm)', role: 'Intermediate Probe', desc: 'Measures progressive conductive temperature drop.' },
+              { id: 'T3', pos: '0.15 m (15 cm)', role: 'Intermediate Probe', desc: 'Verifies linear axial temperature profile.' },
+              { id: 'T4', pos: '0.20 m (20 cm)', role: 'Mid-Rod Probe', desc: 'Center of metallic rod.' },
+              { id: 'T5', pos: '0.25 m (25 cm)', role: 'Intermediate Probe', desc: 'Downstream intermediate reading.' },
+              { id: 'T6', pos: '0.30 m (30 cm)', role: 'Intermediate Probe', desc: 'Approaching cooling jacket.' },
+              { id: 'T7', pos: '0.35 m (35 cm)', role: 'Cold End Probe', desc: 'Final probe before cooling section.' },
+              { id: 'T8', pos: 'Inlet Water', role: 'Cooling Water In', desc: 'Ambient supply temperature (20.0°C).' },
+              { id: 'T9', pos: 'Outlet Water', role: 'Cooling Water Out', desc: 'Temperature after absorbing rod heat (T8 + ΔTw).' },
+            ].map((sensor) => (
+              <div key={sensor.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-base text-amber-400">{sensor.id}</span>
+                  <span className="font-mono text-[11px] text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 font-semibold">
+                    {sensor.pos}
+                  </span>
+                </div>
+                <span className="text-xs font-semibold text-slate-200">{sensor.role}</span>
+                <p className="text-[11px] text-slate-400">{sensor.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Section 4: Material Properties & Expected Results */}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+            <BarChart3 className="w-5 h-5 text-emerald-400" />
+            <h2 className="font-bold text-lg text-slate-100">4. Materials &amp; Expected Experimental Results</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400 font-mono uppercase">
+                  <th className="py-2.5 pr-4">Material Specimen</th>
+                  <th className="py-2.5 pr-4 text-right">Reference k [W/(m&middot;K)]</th>
+                  <th className="py-2.5 pr-4 text-right">Density &rho; [kg/m&sup3;]</th>
+                  <th className="py-2.5 pr-4 text-right">Specific Heat Cp [J/(kg&middot;K)]</th>
+                  <th className="py-2.5 pr-4">Expected Steady T1 (at 8.5V)</th>
+                  <th className="py-2.5">Typical Expected k_exp</th>
+                </tr>
+              </thead>
+              <tbody className="font-mono text-slate-300 divide-y divide-slate-800/60">
+                <tr>
+                  <td className="py-3 pr-4 font-bold text-amber-400">Pure Copper (Cu)</td>
+                  <td className="py-3 pr-4 text-right font-black text-amber-300">385.0</td>
+                  <td className="py-3 pr-4 text-right">8960</td>
+                  <td className="py-3 pr-4 text-right">385</td>
+                  <td className="py-3 pr-4 text-slate-300">65 &ndash; 70 &deg;C</td>
+                  <td className="py-3 text-emerald-400 font-bold">375 &ndash; 390 W/(m&middot;K) (&lt;3% error)</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 font-bold text-slate-200">Aluminium Alloy (6061)</td>
+                  <td className="py-3 pr-4 text-right font-black text-slate-300">205.0</td>
+                  <td className="py-3 pr-4 text-right">2700</td>
+                  <td className="py-3 pr-4 text-right">900</td>
+                  <td className="py-3 pr-4 text-slate-300">72 &ndash; 78 &deg;C</td>
+                  <td className="py-3 text-emerald-400 font-bold">198 &ndash; 212 W/(m&middot;K) (&lt;4% error)</td>
+                </tr>
+                <tr>
+                  <td className="py-3 pr-4 font-bold text-slate-400">Stainless Steel (304)</td>
+                  <td className="py-3 pr-4 text-right font-black text-slate-400">50.2</td>
+                  <td className="py-3 pr-4 text-right">7850</td>
+                  <td className="py-3 pr-4 text-right">490</td>
+                  <td className="py-3 pr-4 text-slate-300">95 &ndash; 110 &deg;C</td>
+                  <td className="py-3 text-emerald-400 font-bold">48 &ndash; 53 W/(m&middot;K) (&lt;5% error)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 text-xs font-mono text-slate-400 leading-relaxed">
+            <strong className="text-slate-200">Steady-State Stability Criterion:</strong> Thermal equilibrium is achieved when the rate of temperature variation across all nodes falls below <span className="text-emerald-400 font-bold">&plusmn;0.008 &deg;C/s</span>. In Real Lab mode, students must wait for steady-state detection before logging certified observations.
+          </div>
+        </section>
+
+        {/* Section 5: Step-by-Step Experimental Procedure */}
+        <section className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-2.5 border-b border-slate-800 pb-3">
+            <Gauge className="w-5 h-5 text-indigo-400" />
+            <h2 className="font-bold text-lg text-slate-100">5. Laboratory Procedure &amp; Submission Workflow</h2>
+          </div>
+          <ol className="flex flex-col gap-3 text-sm">
+            {[
+              {
+                step: '1. Select Test Specimen',
+                desc: 'Choose Copper, Aluminium, or Stainless Steel from the Material Selector.'
+              },
+              {
+                step: '2. Verify Apparatus Physical Parameters',
+                desc: 'Check Rod Diameter D (default 25mm), Length L (50cm), and Heater Resistance R (15Ω). Adjust if testing non-standard geometry.'
+              },
+              {
+                step: '3. Initiate Cooling Water Circulation',
+                desc: 'Open the virtual needle valve to establish cooling water flow rate between 1.2 and 1.8 L/min. T8 will read 20.0°C.'
+              },
+              {
+                step: '4. Energize Dimmer-Stat Heater',
+                desc: 'Set heater voltage between 7.0V and 10.0V. Current I = V / R is automatically derived according to Ohm\'s Law.'
+              },
+              {
+                step: '5. Observe Transient Heat Wave Front',
+                desc: 'Switch 3D mode to "Thermal" or "Flux" to view thermal conduction colors advancing along the rod in real-time.'
+              },
+              {
+                step: '6. Attain Thermal Steady-State Equilibrium',
+                desc: 'Allow continuous heat transfer until |dT/dt| < 0.008 °C/s. The status banner turns green "STEADY STATE / READY TO RECORD".'
+              },
+              {
+                step: '7. Log Observations in Virtual Tablet',
+                desc: 'Record at least 3 timed snapshot observations in your lab notebook. Export to CSV for external reports.'
+              },
+              {
+                step: '8. Calculate Fourier Thermal Conductivity & Submit',
+                desc: 'In Fourier Workbench, verify experimental k and % error. Select your destination Faculty Member or enter their institutional Email/Classroom code, and click "Submit Official Lab Exam".'
+              }
+            ].map((item, idx) => (
+              <li key={item.step} className="flex items-start gap-3 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
+                <span className="w-6 h-6 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 font-mono font-bold text-xs flex items-center justify-center shrink-0">
+                  {idx + 1}
+                </span>
+                <div>
+                  <h4 className="font-bold text-slate-100 text-xs">{item.step}</h4>
+                  <p className="text-xs text-slate-400 mt-0.5">{item.desc}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        {/* Footer Navigation */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-800">
+          <span className="text-xs font-mono text-slate-500">
+            ThermoTwin &bull; Autonomous Thermal Digital Twin Platform
+          </span>
+          <div className="flex items-center gap-3">
+            <Link
+              to="/"
+              className="text-xs font-mono text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              &larr; Home Page
+            </Link>
+            <span className="text-slate-700">&bull;</span>
+            <Link
+              to="/student/experiment/thermal_conductivity"
+              className="text-xs font-mono text-amber-400 hover:text-amber-300 transition-colors font-semibold"
+            >
+              Launch Virtual Experiment &rarr;
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
