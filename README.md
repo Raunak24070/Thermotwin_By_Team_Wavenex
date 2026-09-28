@@ -1,158 +1,272 @@
-
 # ThermoTwin — Thermal Conductivity Digital Twin Platform
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Three.js](https://img.shields.io/badge/Three.js-r128%2B-black?style=flat-square&logo=three.js)](https://threejs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-v4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Physics](https://img.shields.io/badge/Physics-1D_FDTD_Explicit-orange?style=flat-square)](https://en.wikipedia.org/wiki/Finite-difference_time-domain_method)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20Project-2ea44f?style=flat-square)](https://your-live-project-url.vercel.app)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=flat-square&logo=github)](https://github.com/your-username/thermotwin)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vite.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-3D%20Simulation-black?style=flat-square&logo=three.js)](https://threejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
-**ThermoTwin** is an autonomous virtual laboratory digital twin engineered according to the **YCCE September 2026 Problem Statement** for the **Determination of Thermal Conductivity of a Metallic Rod**. 
-
-It couples an authentic 1D Finite Difference Time Domain (FDTD) thermal diffusion solver directly to an interactive 3D WebGL laboratory apparatus, a live multi-sensor telemetry suite, an observation tablet, a Fourier's Law calculator, and a faculty-routed academic review pipeline.
-
----
-
-## 🚀 Quick Start
-
-### 1. Prerequisites
-- **Node.js** v18.17+ or v20+
-- **npm** v9+ (or pnpm / yarn)
-
-### 2. Installation & Running
-
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/thermotwin-web.git
-cd thermotwin-web
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-Open your browser at **[http://localhost:3000](http://localhost:3000)**.
-
-### 3. Production Build & Verification
-
-```bash
-# Build optimized production bundle
-npm run build
-
-# Start production server
-npm start
-```
+> An interactive browser-based virtual laboratory for determining the thermal conductivity of metallic rods through numerical simulation, 3D visualization, virtual instrumentation, and Fourier-law analysis.
 
 ---
 
-## 🧪 Core Scientific & Digital Twin Capabilities
+## 🔬 Overview
 
-### 1. Single Authoritative Physics State
-- Powered by a 50-node explicit **1D FDTD heat conduction solver** with sub-stepping for CFL numerical stability:
-  $$\Delta t \le \frac{0.35 \cdot \rho \cdot C_p \cdot (\Delta x)^2}{2k}$$
-- Models non-steady state transient thermal wave fronts, radiative emission, convective water cooling, and ambient casing losses without artificial hardcoded curves.
+ThermoTwin is a browser-based virtual laboratory that digitally simulates the thermal conductivity experiment for a metallic rod.
 
-### 2. User-Configurable Apparatus Parameters
-Students can test non-standard specimens by modifying physical geometry directly in the control panel:
-- **Rod Diameter ($D$)**: Configurable from $10\text{ mm}$ to $50\text{ mm}$ (auto-derives cross-sectional area $A = \frac{\pi D^2}{4}$).
-- **Rod Length ($L$)**: Configurable from $20\text{ cm}$ to $100\text{ cm}$.
-- **Heater Resistance ($R$)**: Configurable from $5\text{ }\Omega$ to $50\text{ }\Omega$.
-- Real-time binding: Changes immediately propagate to the solver's node heat capacity, thermal resistance, and Fourier conductivity calculations.
+The application combines an interactive Three.js apparatus with a numerical heat-conduction solver, virtual thermocouples, live telemetry, temperature visualization, observation capture, and Fourier-law analysis.
 
-### 3. Decoupled Dimmer-Stat (Voltage / Current)
-- **Voltage Slider ($0 - 12\text{ V}$)**: Primary user input dial controlling electrical heater excitation.
-- **Current Readout ($I = V/R$)**: Displayed via a read-only live telemetry meter governed strictly by Ohm's Law. Adjusting voltage smoothly updates the derived current without conflicting dual inputs.
+The objective is to provide students with an environment where they can configure an experiment, observe the simulated thermal behaviour, collect readings, perform calculations, and generate a report without requiring physical laboratory equipment for every practice session.
 
-### 4. 9-Channel Thermocouple Telemetry Suite
-- **$T_1 - T_7$**: Seven physical thermocouples placed at 5 cm intervals along the rod ($x = 0.05\text{m}$ to $0.35\text{m}$).
-- **$T_8$**: Cooling water inlet temperature ($20.0^\circ\text{C}$ ambient supply).
-- **$T_9$**: Cooling water outlet temperature ($T_8 + \Delta T_w$), tracking enthalpy extraction in real time.
-- **Spatial Temperature Gradient ($dT/dx$)**: Computed via online linear regression across $T_1 - T_7$.
-
-### 5. Multi-Mode 3D Laboratory Visualization
-- **Normal View**: Realistic brushed metal textures, ceramic heater casing, and acrylic water jacket.
-- **Thermal Gradient View**: Vertex-colored continuous temperature spectrum ($20^\circ\text{C}$ deep blue $\rightarrow$ cyan $\rightarrow$ yellow $\rightarrow$ fiery orange $\rightarrow$ incandescent red).
-- **Flux / Heatflow Mode**: Dynamic axial heat flux streamline particles showing directional thermal conduction towards the cooling jacket.
-- **Cutaway View**: Internal cross-section revealing core conductor and thermocouple junction embedding.
-
-### 6. Four-Stage Thermal Steady-State Stability Engine
-Categorizes experimental stability based on maximum node temperature variation rate ($|dT/dt|$):
-1. **TRANSIENT** ($|dT/dt| \ge 0.05^\circ\text{C/s}$)
-2. **APPROACHING STEADY STATE** ($|dT/dt| < 0.02^\circ\text{C/s}$)
-3. **STEADY STATE** ($|dT/dt| < 0.008^\circ\text{C/s}$)
-4. **READY TO RECORD** (Maintained steady state for $\ge 15\text{ seconds}$)
+> ThermoTwin is designed as an educational simulation and demonstration platform and does not claim to replace physical laboratory measurements.
 
 ---
 
-## 👥 Clean User Architecture & Faculty Submission Routing
+## ✨ Key Features
 
-The project starts in a **clean, unseeded state** (zero mock accounts or dummy submissions in localStorage).
-
-### Setting Up Genuine Accounts:
-You can register your intended **7 student accounts** and **3 teacher accounts** directly via the `/register` page:
-
-1. **Teacher Registration**:
-   - Go to `/register`
-   - Select Role: **Faculty / Instructor**
-   - Provide Name, Email, Password, Institution, and Faculty ID (e.g., `FAC-ME-01`).
-   - Log in to access the **Teacher Dashboard**, **Live Lab Monitor**, and **Submissions Queue**.
-
-2. **Student Registration**:
-   - Go to `/register`
-   - Select Role: **Student**
-   - Provide Name, Email, Password, Institution, and Student ID (e.g., `2026-ME-001`).
-   - Log in to conduct experiments in the **3D Virtual Lab**.
-
-### Faculty-Targeted Submission Routing:
-- When a student completes an experiment in the **Fourier Workbench**, they select their target instructor from the **Faculty Dropdown** or enter their teacher's email address / classroom code.
-- Each teacher's **Submissions Queue** (`/teacher/results`) and **Dashboard** (`/teacher/dashboard`) strictly filter and display **only submissions directed to that specific faculty member**.
+- 🧪 Interactive thermal-conductivity experiment
+- 🧊 Virtual water-cooling system
+- 🌡️ Nine virtual temperature sensors
+- 🔥 Electrical heater simulation
+- 📈 Live temperature curves
+- 🌐 Interactive Three.js laboratory apparatus
+- 🌡️ Thermal and heat-flow visualization
+- ⚙️ Adjustable voltage and water-flow parameters
+- 🧮 Fourier-law thermal-conductivity calculation
+- 📊 Temperature-gradient analysis
+- ⏱️ Steady-state detection
+- 📝 Observation recording
+- 📄 PDF experiment report generation
+- 👨‍🏫 Faculty monitoring workflow
+- 📚 Student experiment history
+- 🔐 Student and teacher profiles
 
 ---
 
-## 🗺️ Application Route Sitemap
+## 🧠 How It Works
 
-| Route | Role / Access | Description |
-|---|---|---|
-| `/` | Public | Landing page with 3D hero digital twin, feature highlights & quick launch |
-| `/experiment-guide` | Public | Comprehensive experiment theory, parameter tables, sensor positions & formulas |
-| `/about` | Public | Alias / redirect to Experiment Guide & Technical Documentation |
-| `/login` | Public | Authentication sign-in for registered students and faculty |
-| `/register` | Public | Clean user registration form for student and teacher profiles |
-| `/profile` | Authenticated | View and edit user credentials, institution, bio, and role details |
-| `/student/experiment/[id]` | Student / Demo | Main 3D virtual apparatus, controls, live graphs, tablet, & Fourier calculator |
-| `/student/dashboard` | Student | Student laboratory overview, recent attempts, and class assignments |
-| `/student/history` | Student | Past experimental records, certified exam submissions, and grades |
-| `/teacher/dashboard` | Faculty | Instructor portal showing real-time statistics and pending student reviews |
-| `/teacher/live-lab` | Faculty | Real-time multi-student telemetry grid and remote apparatus monitoring |
-| `/teacher/classes` | Faculty | Classroom creation, enrollment code generation, and assignment manager |
-| `/teacher/results` | Faculty | Submission review queue filtered strictly to the logged-in faculty member |
+The experiment follows the general flow:
+
+Student Configuration
+→ Thermal Simulation
+→ Temperature Field
+→ Virtual Thermocouples
+→ Live Telemetry
+→ Steady-State Detection
+→ Fourier Analysis
+→ Experimental Result
+→ Report
+
+The thermal model continuously updates the temperature distribution along the rod based on the selected material and experimental parameters.
 
 ---
 
-## 📖 Standard Laboratory Procedure
+## ⚙️ Thermal Simulation
 
-1. **Launch Lab**: Open `/student/experiment/thermal_conductivity`.
-2. **Select Material**: Choose Copper ($k \approx 385$), Aluminium ($k \approx 205$), or Steel ($k \approx 50.2$).
-3. **Verify Apparatus Parameters**: Inspect Rod Diameter $D$, Length $L$, and Heater Resistance $R$.
-4. **Circulate Water**: Open virtual needle valve to $\approx 1.5\text{ L/min}$. Verify inlet temperature $T_8 = 20.0^\circ\text{C}$.
-5. **Set Voltage**: Adjust dimmer-stat voltage between $7.0\text{V}$ and $10.0\text{V}$. Current ($I$) is auto-derived via Ohm's Law.
-6. **Reach Steady State**: Monitor live charts until $|dT/dt| < 0.008^\circ\text{C/s}$ and status reads `STEADY STATE / READY TO RECORD`.
-7. **Record Observations**: In the Virtual Tablet, take at least 3 timed observation snapshots.
-8. **Fourier Analysis**: Review experimental conductivity $k_{exp}$, error percentage, and energy balance.
-9. **Submit to Faculty**: Choose your professor from the dropdown and submit your certified lab report.
+The core numerical model is implemented in:
+
+`src/physics/1dRodSolver.ts`
+
+The solver uses a **50-node explicit finite-difference model** to approximate one-dimensional heat conduction along the rod.
+
+The simulation considers:
+
+- Axial heat conduction
+- Electrical heating
+- Water cooling
+- Heat loss through insulation
+- Water-side heat removal
+- Temperature distribution
+- Water outlet temperature
+- Temperature gradient
+- Experimental thermal conductivity
+- Steady-state behaviour
+
+### Electrical Heating
+
+The heater power is calculated using:
+
+\[
+P = \frac{V^2}{R}
+\]
+
+### Fourier's Law
+
+The experimental conductivity is calculated from:
+
+\[
+Q = -kA\frac{dT}{dx}
+\]
+
+and therefore:
+
+\[
+k_{exp} =
+\frac{Q}
+{A\left|\frac{dT}{dx}\right|}
+\]
+
+---
+
+## 🧱 Material Models
+
+| Material | Reference Thermal Conductivity |
+|---|---:|
+| Copper (Pure) | 385.0 W/(m·K) |
+| Aluminium Alloy (6061) | 205.0 W/(m·K) |
+| Stainless Steel (304) | 50.2 W/(m·K) |
+
+These values form the reference material configurations used by the simulation.
+
+---
+
+## 🌡️ Virtual Instrumentation
+
+ThermoTwin provides nine virtual temperature sensors.
+
+### Rod
+
+`T1 → T7`
+
+These sensors are distributed along the rod and are used to estimate the temperature gradient.
+
+### Cooling System
+
+`T8` — Water inlet temperature  
+`T9` — Water outlet temperature
+
+Additional live parameters include:
+
+- Voltage
+- Current
+- Electrical power
+- Water flow rate
+- Heat removed by water
+- Heat loss
+- Temperature gradient
+- Steady-state status
+
+---
+
+## 🧪 Experiment Configuration
+
+The default apparatus configuration is:
+
+| Parameter | Value |
+|---|---:|
+| Rod Length | 0.50 m |
+| Rod Diameter | 25 mm |
+| Heater Resistance | 15 Ω |
+| Ambient Temperature | 20 °C |
+| Maximum Water Flow | 3 L/min |
+| Numerical Nodes | 50 |
+
+Students can modify supported experiment parameters through the control interface.
+
+---
+
+## 🖥️ 3D Laboratory
+
+The virtual apparatus is built using:
+
+- Three.js
+- React Three Fiber
+- Drei
+
+The 3D environment provides an interactive representation of the experimental setup rather than a static illustration.
+
+Visualization includes:
+
+- Apparatus view
+- Thermal visualization
+- Heat/flux visualization
+- Sensor indicators
+- Temperature curves
+- Interactive camera controls
+
+---
+
+## 📋 Experiment Workflow
+
+1. Create a student or teacher profile.
+2. Sign in to the application.
+3. Open the thermal-conductivity experiment.
+4. Select the required material.
+5. Configure voltage, water flow, and apparatus parameters.
+6. Start the simulation.
+7. Monitor the 3D apparatus and sensor telemetry.
+8. Wait for the simulation to reach the required steady-state condition.
+9. Capture experimental observations.
+10. Analyse the temperature gradient.
+11. Calculate experimental thermal conductivity.
+12. Review or export the experiment report.
+
+---
+
+## 👨‍🏫 Faculty Workflow
+
+Faculty users have access to a separate workflow for:
+
+- Class management
+- Assignment management
+- Live laboratory monitoring
+- Individual student monitoring
+- Experiment results
+- Result review
+
+The current implementation uses persisted client-side application state for demonstration purposes.
 
 ---
 
 ## 🛠️ Technology Stack
-- **Framework**: Next.js 16 (App Router, Turbopack)
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS v4, Lucide React Icons
-- **3D Graphics**: Three.js r186, React Three Fiber v9, React Three Drei v10
-- **State Management**: Zustand v5 with persistent localStorage
-- **Animations**: GSAP v3, Framer Motion v13
-- **Charts**: Recharts v3
-- **PDF Export**: jsPDF v4
-=======
-# Thermotwin_By_Team_Wavenex
+
+| Category | Technologies |
+|---|---|
+| Frontend | React 19, TypeScript |
+| Build Tool | Vite 5 |
+| Routing | React Router 7 |
+| 3D | Three.js, React Three Fiber, Drei |
+| State | Zustand 5 |
+| Styling | Tailwind CSS 4 |
+| Animation | GSAP, Framer Motion |
+| Charts | Recharts |
+| Icons | Lucide React |
+| Reports | jsPDF |
+| Deployment | Docker, nginx |
+
+---
+
+## 🏗️ Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │      React UI       │
+                    └──────────┬──────────┘
+                               │
+             ┌─────────────────┼─────────────────┐
+             │                 │                 │
+             ▼                 ▼                 ▼
+        Student UI        Faculty UI       3D Laboratory
+             │                 │                 │
+             └─────────────────┼─────────────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │   Zustand Stores   │
+                    └──────────┬──────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │ Thermal Rod Solver  │
+                    └──────────┬──────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │ Sensor Telemetry    │
+                    └──────────┬──────────┘
+                               ▼
+              ┌────────────────┴────────────────┐
+              ▼                                 ▼
+       Live Visualization                 Fourier Analysis
+              │                                 │
+              └────────────────┬────────────────┘
+                               ▼
+                       Experiment Report
