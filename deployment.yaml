@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thermotwin-react
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thermotwin-react
+  template:
+    metadata:
+      labels:
+        app: thermotwin-react
+    spec:
+      containers:
+      - name: web
+        image: thermotwin:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
