@@ -125,20 +125,20 @@ export const LabCanvas: React.FC = () => {
     : null;
 
   return (
-    <div className="w-full h-full relative bg-slate-950 rounded-xl overflow-hidden shadow-2xl border border-slate-800">
+    <div className="w-full h-full relative bg-[#0D0F0E] overflow-hidden">
       {/* 3D View Mode Badge & Labels Toggle */}
-      <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
-        <span className="px-3 py-1 bg-slate-900/90 text-slate-200 border border-slate-700/80 rounded-lg text-xs font-mono font-semibold tracking-wide backdrop-blur-md shadow-lg flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-2 font-mono">
+        <span className="px-3 py-1 bg-[#171918]/90 text-[#F5F5F5] border border-[#252825] rounded-xl text-xs font-semibold tracking-wide backdrop-blur-md shadow-lg flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-[#39FF14] animate-pulse glow-green-sm" />
           3D VIEW: {viewMode === 'heatflow' ? 'HEAT FLUX' : viewMode.toUpperCase()}
         </span>
 
         <button
           onClick={() => setShow3DLabels(!show3DLabels)}
-          className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 shadow-md backdrop-blur-md cursor-pointer ${
+          className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 shadow-md backdrop-blur-md cursor-pointer ${
             show3DLabels
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-              : 'bg-slate-900/90 text-slate-400 border-slate-700 hover:text-slate-200'
+              ? 'bg-[#102713] text-[#39FF14] border-[#163D19] glow-green-sm'
+              : 'bg-[#171918]/90 text-[#7C827C] border-[#252825] hover:text-[#F5F5F5]'
           }`}
         >
           <Tag className="w-3.5 h-3.5" />
@@ -147,9 +147,9 @@ export const LabCanvas: React.FC = () => {
       </div>
 
       {/* 3D Interactive Hotspot Selection Pills */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 flex-wrap justify-end">
-        <span className="text-[10px] font-mono font-semibold text-slate-400 mr-1 hidden sm:inline">
-          INSPECT:
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 flex-wrap justify-end font-mono">
+        <span className="text-[10px] font-semibold text-[#7C827C] mr-1 hidden sm:inline">
+          FOCUS:
         </span>
         {([
           { id: 'HEATER', icon: Flame, label: 'Heater' },
@@ -165,10 +165,10 @@ export const LabCanvas: React.FC = () => {
               onClick={() => setInspectedPart(isInspected ? null : id as any)}
               onMouseEnter={() => setHoveredPart(id)}
               onMouseLeave={() => setHoveredPart(null)}
-              className={`px-2 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 shadow-md backdrop-blur-md cursor-pointer ${
+              className={`px-2.5 py-1 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 shadow-md backdrop-blur-md cursor-pointer ${
                 isInspected
-                  ? 'bg-amber-500 text-slate-950 border-amber-400 font-extrabold'
-                  : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
+                  ? 'bg-[#102713] text-[#39FF14] border-[#163D19] glow-green-sm'
+                  : 'bg-[#171918]/90 text-[#B5BBB5] border-[#252825] hover:bg-[#202321] hover:text-[#F5F5F5]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -239,7 +239,7 @@ export const LabCanvas: React.FC = () => {
         gl={{ antialias: true, alpha: false }}
         className="w-full h-full cursor-grab active:cursor-grabbing"
       >
-        <color attach="background" args={['#090d16']} />
+        <color attach="background" args={['#0D0F0E']} />
         
         {/* Lighting Setup */}
         <ambientLight intensity={0.65} />

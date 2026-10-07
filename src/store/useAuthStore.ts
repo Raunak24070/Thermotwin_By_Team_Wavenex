@@ -29,12 +29,56 @@ interface AuthState {
   logout: () => void;
 }
 
+const DEFAULT_STUDENT: UserProfile = {
+  id: 'user-std-101',
+  name: 'Alex Rivera',
+  email: 'alex.rivera@university.edu',
+  role: 'STUDENT',
+  institution: 'Institute of Thermal Technology',
+  department: 'Mechanical Engineering Department',
+  studentIdNumber: 'ME-2026-4401',
+  classId: 'class-thermo-101',
+  bio: 'Engineering undergraduate conducting 1D heat conduction laboratory experiment.',
+  joinedDate: 'September 2025',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'
+};
+
+const DEFAULT_USERS: (UserProfile & { password?: string })[] = [
+  { ...DEFAULT_STUDENT, password: 'password123' },
+  {
+    id: 'user-tch-201',
+    name: 'Dr. Marcus Vance',
+    email: 'm.vance@university.edu',
+    role: 'TEACHER',
+    institution: 'Institute of Thermal Technology',
+    department: 'Department of Thermal Sciences',
+    teacherIdNumber: 'FAC-7701',
+    bio: 'Lead Professor, Advanced Heat Conduction & Transport Phenomena',
+    joinedDate: 'August 2022',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80',
+    password: 'password123'
+  },
+  {
+    id: 'user-tch-202',
+    name: 'Dr. Elena Rostova',
+    email: 'e.rostova@university.edu',
+    role: 'TEACHER',
+    institution: 'Institute of Thermal Technology',
+    department: 'Applied Thermodynamics & Energy',
+    teacherIdNumber: 'FAC-8820',
+    bio: 'Associate Professor, Thermal Systems & Digital Twin Computing',
+    joinedDate: 'January 2024',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
+    password: 'password123'
+  }
+];
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      currentUser: null,
-      isAuthenticated: false,
-      registeredUsers: [],
+      currentUser: DEFAULT_STUDENT,
+      isAuthenticated: true,
+      registeredUsers: DEFAULT_USERS,
 
       loginUser: (email: string, password?: string) => {
         const { registeredUsers } = get();

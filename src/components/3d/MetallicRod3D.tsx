@@ -14,33 +14,28 @@ interface MetallicRod3DProps {
 }
 
 // Multi-stop scientific thermal spectrum:
-// 20°C: Deep Cool Ambient Blue (#1e3a8a)
-// 28°C: Cool Cyan (#06b6d4)
-// 36°C: Thermal Green (#10b981)
-// 46°C: Warm Golden Yellow (#eab308)
-// 58°C: Fiery Orange (#f97316)
-// 70°C+: Incandescent Crimson Red (#dc2626)
+// 20°C: Cool Blue (#2563EB)
+// 30°C: Cool Cyan (#38BDF8)
+// 45°C: Warm Yellow (#F59E0B)
+// 60°C: Fiery Orange (#FF6B35)
+// 75°C+: Hot Red (#EF4444)
 function getThermalSpectrumColor(tempC: number): THREE.Color {
-  const t = Math.max(20.0, Math.min(75.0, tempC));
+  const t = Math.max(20.0, Math.min(80.0, tempC));
 
   if (t <= 20.2) {
-    // Initial Cold Resting State: Scientific Deep Cool Blue
-    return new THREE.Color('#1e3a8a');
-  } else if (t <= 28.0) {
-    const factor = (t - 20.0) / 8.0;
-    return new THREE.Color('#1e3a8a').lerp(new THREE.Color('#06b6d4'), factor);
-  } else if (t <= 36.0) {
-    const factor = (t - 28.0) / 8.0;
-    return new THREE.Color('#06b6d4').lerp(new THREE.Color('#10b981'), factor);
-  } else if (t <= 46.0) {
-    const factor = (t - 36.0) / 10.0;
-    return new THREE.Color('#10b981').lerp(new THREE.Color('#eab308'), factor);
-  } else if (t <= 58.0) {
-    const factor = (t - 46.0) / 12.0;
-    return new THREE.Color('#eab308').lerp(new THREE.Color('#f97316'), factor);
+    return new THREE.Color('#2563EB');
+  } else if (t <= 30.0) {
+    const factor = (t - 20.0) / 10.0;
+    return new THREE.Color('#2563EB').lerp(new THREE.Color('#38BDF8'), factor);
+  } else if (t <= 45.0) {
+    const factor = (t - 30.0) / 15.0;
+    return new THREE.Color('#38BDF8').lerp(new THREE.Color('#F59E0B'), factor);
+  } else if (t <= 60.0) {
+    const factor = (t - 45.0) / 15.0;
+    return new THREE.Color('#F59E0B').lerp(new THREE.Color('#FF6B35'), factor);
   } else {
-    const factor = Math.min(1.0, (t - 58.0) / 14.0);
-    return new THREE.Color('#f97316').lerp(new THREE.Color('#dc2626'), factor);
+    const factor = Math.min(1.0, (t - 60.0) / 20.0);
+    return new THREE.Color('#FF6B35').lerp(new THREE.Color('#EF4444'), factor);
   }
 }
 

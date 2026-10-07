@@ -33,6 +33,9 @@ interface PhysicsStoreState {
   observations: ObservationRecord[];
   eventLog: ExperimentEvent[];
   
+  // Sensor Rates (°C/s) for live telemetry
+  sensorRates: Record<'t1' | 't2' | 't3' | 't4' | 't5' | 't6' | 't7' | 't8' | 't9', number>;
+
   // Time history for charts
   chartDataHistory: {
     time: number;
@@ -117,6 +120,17 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
     rodLengthCm: 50,
     heaterResistanceR: 15.0,
     crossSectionArea: APPARATUS_CONFIG.crossSectionArea,
+  },
+  sensorRates: {
+    t1: 0,
+    t2: 0,
+    t3: 0,
+    t4: 0,
+    t5: 0,
+    t6: 0,
+    t7: 0,
+    t8: 0,
+    t9: 0
   },
   chartDataHistory: [],
 
@@ -426,8 +440,19 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
   },
 
   stepSimulation: (dtSeconds: number) => {
-    const { solver, chartDataHistory, simState } = get();
+    const { solver, chartDataHistory, simState, sensorRates } = get();
     const nextState = solver.step(dtSeconds);
+
+    // Calculate dynamic rate of change for each thermocouple (°C/s)
+    const updatedRates = { ...sensorRates };
+    const sensorKeys = ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8', 't9'] as const;
+    const safeDt = Math.max(0.01, dtSeconds);
+    for (const key of sensorKeys) {
+      const instantRate = (nextState.sensors[key] - simState.sensors[key]) / safeDt;
+      const prevRate = sensorRates[key] || 0;
+      // Exponential moving average for smooth display
+      updatedRates[key] = Number((prevRate * 0.75 + instantRate * 0.25).toFixed(3));
+    }
 
     // Append to rolling chart history (keep last 120 data points)
     const newHistoryPoint = {
@@ -457,6 +482,7 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
 
     set({
       simState: nextState,
+      sensorRates: updatedRates,
       chartDataHistory: updatedHistory
     });
   },

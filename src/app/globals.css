@@ -1,34 +1,69 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    background-color: #090d16;
-    color: #f1f5f9;
+  :root {
+    --bg-app: #0D0F0E;
+    --bg-workspace: #111312;
+    --bg-panel: #171918;
+    --bg-panel-secondary: #202321;
+    --bg-panel-elevated: #242725;
+    --border-primary: #303330;
+    --border-subtle: #252825;
+    --accent-green: #39FF14;
+    --accent-green-hover: #4ADE2A;
+    --accent-green-soft: #8BEA63;
+    --accent-green-dark: #163D19;
+    --accent-green-surface: #102713;
+    --text-primary: #F5F5F5;
+    --text-secondary: #B5BBB5;
+    --text-muted: #7C827C;
+    --text-disabled: #555B55;
+    --text-tech: #E8ECE8;
   }
 
-  /* Improved heading hierarchy */
-  h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 900; letter-spacing: -0.03em; }
-  h2 { font-size: 1.25rem;  line-height: 1.75rem; font-weight: 800; letter-spacing: -0.02em; }
-  h3 { font-size: 0.9375rem; line-height: 1.375rem; font-weight: 700; letter-spacing: -0.01em; }
+  body {
+    background-color: #0D0F0E;
+    color: #F5F5F5;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
 }
 
-/* Custom scrollbars for data tables and logs */
+/* ThermoTwin Subtle Green Glow */
+.glow-green {
+  box-shadow: 0 0 14px rgba(57, 255, 20, 0.18);
+}
+
+.glow-green-sm {
+  box-shadow: 0 0 8px rgba(57, 255, 20, 0.12);
+}
+
+.glow-green-border {
+  border-color: rgba(57, 255, 20, 0.4);
+  box-shadow: 0 0 10px rgba(57, 255, 20, 0.12);
+}
+
+/* Custom scrollbars for dark engineering panels */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #111312;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #303330;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #39FF14;
 }
 
 /* Thermal indicator bar base */
