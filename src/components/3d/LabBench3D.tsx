@@ -21,13 +21,11 @@ export const LabBench3D: React.FC = () => {
         <meshStandardMaterial color="#334155" roughness={0.4} metalness={0.8} />
       </mesh>
 
-      {/* Grid Alignment Markings on Bench Surface */}
-      {[-3, -2, -1, 0, 1, 2, 3].map((x) => (
-        <mesh key={`grid-x-${x}`} position={[x, 0.015, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <planeGeometry args={[0.01, 3.6]} />
-          <meshBasicMaterial color="#475569" transparent opacity={0.3} />
-        </mesh>
-      ))}
+      {/* Precision CAD Engineering Coordinate Grid on Bench Surface */}
+      <gridHelper
+        args={[8.0, 32, '#166534', '#1e293b']}
+        position={[0, 0.02, 0]}
+      />
 
       {/* 2. Heavy-Duty Cast-Iron Bench Stands Holding the Apparatus */}
       {/* Stand Left (under x = -1.2) */}
