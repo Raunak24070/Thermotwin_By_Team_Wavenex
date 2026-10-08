@@ -21,46 +21,6 @@ const generateToken = (user) => {
   );
 };
 
-// Seed default users if DB is empty
-const seedDefaultUsersIfEmpty = async () => {
-  try {
-    const count = await User.countDocuments();
-    if (count === 0) {
-      console.log('[Auth] Seeding default lab accounts (Student & Faculty)...');
-      const hash = await User.hashPassword('password123');
-      
-      await User.create([
-        {
-          name: 'Alex Rivera',
-          email: 'alex.rivera@university.edu',
-          passwordHash: hash,
-          role: 'STUDENT',
-          institution: 'Institute of Thermal Technology',
-          department: 'Mechanical Engineering Department',
-          studentIdNumber: 'ME-2026-4401',
-          avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80'
-        },
-        {
-          name: 'Dr. Marcus Vance',
-          email: 'm.vance@university.edu',
-          passwordHash: hash,
-          role: 'TEACHER',
-          institution: 'Institute of Thermal Technology',
-          department: 'Department of Thermal Sciences',
-          teacherIdNumber: 'FAC-7701',
-          avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80'
-        }
-      ]);
-      console.log('[Auth] Seeded default accounts successfully.');
-    }
-  } catch (err) {
-    console.error('[Auth Seed Warning]:', err.message);
-  }
-};
-
-// Call once on route initialization
-seedDefaultUsersIfEmpty();
-
 // @route   POST /api/auth/register
 // @desc    Register a new user
 router.post('/register', async (req, res) => {

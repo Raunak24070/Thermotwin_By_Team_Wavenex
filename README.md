@@ -233,7 +233,32 @@ The current implementation uses persisted client-side application state for demo
 | Charts | Recharts |
 | Icons | Lucide React |
 | Reports | jsPDF |
-| Deployment | Docker, nginx |
+| Deployment | Vercel (Vite frontend and serverless Express API) |
+
+---
+
+## 🚀 Deploy to Vercel
+
+The Vercel project must use the directory containing this `package.json` as its
+**Root Directory** (`Thermotwin_By_Team_Wavenex` if importing the parent
+repository). Do not select the parent `E:\thermal` folder: it does not contain
+the Node.js project manifest.
+
+Vercel uses `npm run build` to create the Vite frontend in `dist`. The included
+`vercel.json` serves the React app for client-side routes and forwards `/api/*`
+requests to the Express serverless function in `api/index.js`.
+
+Configure these environment variables in the Vercel project settings for each
+deployment environment:
+
+| Variable | Required | Value |
+|---|---|---|
+| `MONGODB_URI` | Yes | MongoDB Atlas connection string, with network access enabled for the deployment |
+| `JWT_SECRET` | Yes | A long, random secret used to sign authentication tokens |
+
+After setting the Root Directory and environment variables, deploy the project.
+Users can create accounts through the registration page; the deployment does
+not create accounts with default passwords.
 
 ---
 

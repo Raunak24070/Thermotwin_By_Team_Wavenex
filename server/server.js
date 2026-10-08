@@ -1,4 +1,8 @@
 require('dotenv').config();
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET must be configured in production.');
+}
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db');
@@ -7,9 +11,6 @@ const experimentRoutes = require('./routes/experimentRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Connect to MongoDB
-connectDB();
 
 // Middleware
 app.use(cors({
@@ -30,6 +31,16 @@ app.get('/api/healthcheck', (req, res) => {
   });
 });
 
+// Connect lazily so serverless instances reuse a single MongoDB connection.
+app.use('/api', async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/experiments', experimentRoutes);
@@ -43,10 +54,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start Express Server
-const server = app.listen(PORT, () => {
-  console.log(`[ThermoTwin Server] Running at http://localhost:${PORT}`);
-  console.log(`[ThermoTwin Server] Healthcheck: http://localhost:${PORT}/api/healthcheck`);
-});
+module.exports = { app };
 
-module.exports = { app, server };
+if (require.main === module) {
+  const server = app.listen(PORT, () => {
+    console.log(`[ThermoTwin Server] Running at http://localhost:${PORT}`);
+    console.log(`[ThermoTwin Server] Healthcheck: http://localhost:${PORT}/api/healthcheck`);
+  });
+  module.exports.server = server;
+}
