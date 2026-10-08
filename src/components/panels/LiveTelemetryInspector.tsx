@@ -8,16 +8,18 @@ import {
   TrendingDown, 
   Minus, 
   PlusCircle,
-  AlertCircle
+  AlertCircle,
+  ChevronRight
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 import { SENSORS } from '@/physics/sensors';
 
 interface LiveTelemetryInspectorProps {
   onQuickRecord: () => void;
+  onCollapse?: () => void;
 }
 
-export const LiveTelemetryInspector: React.FC<LiveTelemetryInspectorProps> = ({ onQuickRecord }) => {
+export const LiveTelemetryInspector: React.FC<LiveTelemetryInspectorProps> = ({ onQuickRecord, onCollapse }) => {
   const { 
     simState, 
     sensorRates, 
@@ -54,9 +56,20 @@ export const LiveTelemetryInspector: React.FC<LiveTelemetryInspectorProps> = ({ 
               LIVE TELEMETRY &bull; T1&ndash;T9
             </h2>
           </div>
-          <span className="text-[10px] font-mono text-[#8BEA63]">
-            {observations.length} Logs
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-mono text-[#8BEA63]">
+              {observations.length} Logs
+            </span>
+            {onCollapse && (
+              <button
+                onClick={onCollapse}
+                className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+                title="Collapse Properties Inspector (▶)"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           Calibrated Type-K Thermocouple streaming bus.

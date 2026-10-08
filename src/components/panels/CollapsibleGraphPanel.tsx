@@ -54,7 +54,7 @@ const CustomGraphTooltip = ({ active, payload, label }: any) => {
 };
 
 export const CollapsibleGraphPanel: React.FC = () => {
-  const { chartDataHistory, simState } = usePhysicsStore();
+  const { chartDataHistory, simState, isExpandedView } = usePhysicsStore();
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
   const [chartType, setChartType] = useState<'time' | 'spatial'>('time');
   const [visibleSensors, setVisibleSensors] = useState<Record<string, boolean>>({
@@ -156,6 +156,11 @@ export const CollapsibleGraphPanel: React.FC = () => {
 
         {/* Right: Expand / Minimize */}
         <div className="flex items-center gap-2">
+          {isExpandedView && (
+            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#102713] text-[#39FF14] border border-[#163D19] hidden sm:inline">
+              COMPACT TELEMETRY
+            </span>
+          )}
           <span className="text-[10px] font-mono text-[#7C827C]">
             {hasData ? `${chartDataHistory.length} pts` : 'Awaiting data'}
           </span>
@@ -172,7 +177,7 @@ export const CollapsibleGraphPanel: React.FC = () => {
 
       {/* Expanded Chart Body */}
       {isExpanded && (
-        <div className="h-44 p-2 bg-[#111312] relative">
+        <div className={`p-2 bg-[#111312] relative transition-all duration-300 ${isExpandedView ? 'h-28' : 'h-44'}`}>
           {!hasData && chartType === 'time' ? (
             <div className="w-full h-full flex flex-col items-center justify-center text-[#7C827C] font-mono text-xs gap-1">
               <Activity className="w-5 h-5 animate-pulse text-[#39FF14]" />

@@ -8,18 +8,21 @@ import {
   Layers, 
   Flame, 
   Droplets,
-  Ruler
+  Ruler,
+  ChevronLeft
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 
 interface AnalysisPanelProps {
   onBackToExperiment: () => void;
   onOpenNotebook: () => void;
+  onCollapse?: () => void;
 }
 
 export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
   onBackToExperiment,
-  onOpenNotebook
+  onOpenNotebook,
+  onCollapse
 }) => {
   const { 
     observations, 
@@ -42,13 +45,24 @@ export const AnalysisPanel: React.FC<AnalysisPanelProps> = ({
               03 &bull; FOURIER PARAMETERS
             </h2>
           </div>
-          <button
-            onClick={onBackToExperiment}
-            className="flex items-center gap-1 text-[11px] font-mono text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-3 h-3" />
-            <span>Back</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onBackToExperiment}
+              className="flex items-center gap-1 text-[11px] font-mono text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              <span>Back</span>
+            </button>
+            {onCollapse && (
+              <button
+                onClick={onCollapse}
+                className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+                title="Collapse Left Panel (◀)"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           Governing boundary variables &amp; logged steady-state snapshots.

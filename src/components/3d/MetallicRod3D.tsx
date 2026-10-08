@@ -13,29 +13,31 @@ interface MetallicRod3DProps {
   rodRadius?: number;
 }
 
-// Multi-stop scientific thermal spectrum:
-// 20°C: Cool Blue (#2563EB)
-// 30°C: Cool Cyan (#38BDF8)
-// 45°C: Warm Yellow (#F59E0B)
-// 60°C: Fiery Orange (#FF6B35)
-// 75°C+: Hot Red (#EF4444)
-function getThermalSpectrumColor(tempC: number): THREE.Color {
-  const t = Math.max(20.0, Math.min(80.0, tempC));
+// Multi-stop scientific thermal spectrum adhering to specification:
+// COLD:     #2563EB (20°C)
+// COOL:     #38BDF8 (~35°C)
+// WARM:     #F59E0B (~55°C)
+// HOT:      #FF6B35 (~75°C)
+// VERY HOT: #EF4444 (~100°C+)
+export function getThermalSpectrumColor(tempC: number, minT: number = 20.0, maxT: number = 95.0): THREE.Color {
+  const t = Math.max(minT, Math.min(maxT, tempC));
+  const span = Math.max(5.0, maxT - minT);
+  const norm = (t - minT) / span; // 0.0 to 1.0
 
-  if (t <= 20.2) {
-    return new THREE.Color('#2563EB');
-  } else if (t <= 30.0) {
-    const factor = (t - 20.0) / 10.0;
-    return new THREE.Color('#2563EB').lerp(new THREE.Color('#38BDF8'), factor);
-  } else if (t <= 45.0) {
-    const factor = (t - 30.0) / 15.0;
-    return new THREE.Color('#38BDF8').lerp(new THREE.Color('#F59E0B'), factor);
-  } else if (t <= 60.0) {
-    const factor = (t - 45.0) / 15.0;
-    return new THREE.Color('#F59E0B').lerp(new THREE.Color('#FF6B35'), factor);
+  const cCold    = new THREE.Color('#2563EB');
+  const cCool    = new THREE.Color('#38BDF8');
+  const cWarm    = new THREE.Color('#F59E0B');
+  const cHot     = new THREE.Color('#FF6B35');
+  const cVeryHot = new THREE.Color('#EF4444');
+
+  if (norm <= 0.25) {
+    return cCold.lerp(cCool, norm / 0.25);
+  } else if (norm <= 0.50) {
+    return cCool.lerp(cWarm, (norm - 0.25) / 0.25);
+  } else if (norm <= 0.75) {
+    return cWarm.lerp(cHot, (norm - 0.50) / 0.25);
   } else {
-    const factor = Math.min(1.0, (t - 60.0) / 20.0);
-    return new THREE.Color('#FF6B35').lerp(new THREE.Color('#EF4444'), factor);
+    return cHot.lerp(cVeryHot, (norm - 0.75) / 0.25);
   }
 }
 
@@ -89,6 +91,8 @@ export const MetallicRod3D: React.FC<MetallicRod3DProps> = ({
 
     const hotEndTemp = temps[0] || 20.0;
     const midTemp = temps[Math.floor(nodeCount / 2)] || 20.0;
+    const maxT = Math.max(70.0, ...temps);
+    const minT = Math.min(20.0, ...temps);
 
     // Radiative point lights illuminating the apparatus proportionally to actual thermal state
     if (hotEndLightRef.current) {
@@ -101,6 +105,7 @@ export const MetallicRod3D: React.FC<MetallicRod3DProps> = ({
     }
 
     const isThermalOrHeatFlow = viewMode === 'thermal' || viewMode === 'heatflow';
+    const isSensorMode = viewMode === 'sensor';
     const baseMetalColor = new THREE.Color(materialProps.colorHex);
 
     for (let i = 0; i < count; i++) {
@@ -125,18 +130,22 @@ export const MetallicRod3D: React.FC<MetallicRod3DProps> = ({
       let vertexColor: THREE.Color;
       
       if (isThermalOrHeatFlow) {
-        // Pure false-color thermography: Blue (20°C) -> Cyan -> Green -> Yellow -> Orange -> Red (70°C+)
-        vertexColor = getThermalSpectrumColor(tempC);
+        // Continuous scientific thermography: Cold (#2563EB) -> Cool (#38BDF8) -> Warm (#F59E0B) -> Hot (#FF6B35) -> Very Hot (#EF4444)
+        vertexColor = getThermalSpectrumColor(tempC, minT, maxT);
+      } else if (isSensorMode) {
+        // Sensor Mode: Dim apparatus slightly to make thermocouples the hero
+        const baseCold = baseMetalColor.clone().multiplyScalar(0.35);
+        const thermalSpectrum = getThermalSpectrumColor(tempC, minT, maxT);
+        vertexColor = baseCold.lerp(thermalSpectrum, 0.25);
       } else {
-        // Normal & Cutaway Modes:
+        // Normal, Cutaway, Exploded, Cooler, Heater Modes:
         // Visible physical heat conduction front!
-        // Cold regions (20°C) show clear cool state, heating regions transition through thermal temper colors
-        const thermalSpectrum = getThermalSpectrumColor(tempC);
+        const thermalSpectrum = getThermalSpectrumColor(tempC, minT, maxT);
         const heatRatio = Math.max(0.0, Math.min(1.0, (tempC - 20.0) / 45.0)); // 0 at 20°C, 1 at 65°C+
         
         if (heatRatio <= 0.02) {
           // Cold resting rod: deep cool blue-tinted metal surface
-          vertexColor = baseMetalColor.clone().lerp(new THREE.Color('#1e3a8a'), 0.55);
+          vertexColor = baseMetalColor.clone().lerp(new THREE.Color('#1e3a8a'), 0.45);
         } else {
           // Active heat propagation: thermal spectrum visibly dominates while preserving metallic highlights
           vertexColor = baseMetalColor.clone().lerp(thermalSpectrum, 0.35 + heatRatio * 0.65);
@@ -149,13 +158,15 @@ export const MetallicRod3D: React.FC<MetallicRod3DProps> = ({
     colorAttr.needsUpdate = true;
   });
 
+  const isSensorDimmed = viewMode === 'sensor';
+
   return (
     <group>
       <mesh ref={meshRef} geometry={geometry} position={[0, 0, 0]} castShadow receiveShadow>
         <meshStandardMaterial
           vertexColors
-          roughness={viewMode === 'thermal' ? 0.2 : materialProps.roughness * 0.6}
-          metalness={viewMode === 'thermal' ? 0.05 : materialProps.metalness * 0.5}
+          roughness={viewMode === 'thermal' ? 0.2 : isSensorDimmed ? 0.8 : materialProps.roughness * 0.6}
+          metalness={viewMode === 'thermal' ? 0.05 : isSensorDimmed ? 0.1 : materialProps.metalness * 0.5}
         />
       </mesh>
 

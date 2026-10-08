@@ -9,21 +9,25 @@ import {
   Clock, 
   GraduationCap, 
   Users,
-  Award
+  Award,
+  ChevronRight
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 import { useClassStore } from '@/store/useClassStore';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useExperimentStore } from '@/store/useExperimentStore';
 import { performFourierAnalysis } from '@/physics/fourierCalculator';
 
 interface ResultReportInspectorProps {
   onOpenReportPreview: () => void;
+  onCollapse?: () => void;
 }
 
-export const ResultReportInspector: React.FC<ResultReportInspectorProps> = ({ onOpenReportPreview }) => {
+export const ResultReportInspector: React.FC<ResultReportInspectorProps> = ({ onOpenReportPreview, onCollapse }) => {
   const { simState, apparatusConfig, observations, experimentMode } = usePhysicsStore();
   const { submitResult, submissions } = useClassStore();
   const { currentUser, registeredUsers } = useAuthStore();
+  const { saveCurrentExperiment } = useExperimentStore();
 
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>('user-tch-201');
   const [submissionSuccess, setSubmissionSuccess] = useState<boolean>(false);
@@ -50,7 +54,7 @@ export const ResultReportInspector: React.FC<ResultReportInspectorProps> = ({ on
     apparatusConfig.crossSectionArea
   );
 
-  const registeredTeachers = registeredUsers.filter((u) => u.role === 'TEACHER');
+  const registeredTeachers = (registeredUsers || []).filter((u) => u?.role === 'TEACHER');
   const gradeScore = Math.max(60, Math.min(100, Math.round(100 - (analysis?.errorPercentage || 0) * 1.5)));
 
   const handleSubmit = () => {
@@ -96,6 +100,35 @@ export const ResultReportInspector: React.FC<ResultReportInspectorProps> = ({ on
       targetTeacherEmail: targetTeacher?.email
     });
 
+    // Save to MongoDB Archive
+    saveCurrentExperiment({
+      experimentName: `${simState.material.name} Submission #${Date.now().toString().slice(-4)}`,
+      material: simState.material.name,
+      thermalConductivity: analysis.experimentalK,
+      density: simState.material.density,
+      specificHeat: simState.material.specificHeat,
+      rodLength: apparatusConfig.rodLengthCm / 100,
+      rodDiameter: apparatusConfig.rodDiameterMm / 1000,
+      heaterVoltage: simState.voltage,
+      heaterPower: simState.power,
+      coolingWaterFlow: simState.waterFlowLmin,
+      sensorReadings: {
+        t1: simState.sensors.t1,
+        t2: simState.sensors.t2,
+        t3: simState.sensors.t3,
+        t4: simState.sensors.t4,
+        t5: simState.sensors.t5,
+        t6: simState.sensors.t6,
+        t7: simState.sensors.t7,
+        t8: simState.sensors.t8,
+        t9: simState.sensors.t9
+      },
+      temperatureGradient: analysis.temperatureGradientCperM,
+      heatRemoved: analysis.waterHeatRemovalW,
+      experimentStatus: 'SUBMITTED',
+      observationsCount: Math.max(1, observations.length)
+    });
+
     setSubmittedTime(now);
     setSubmissionSuccess(true);
   };
@@ -105,11 +138,22 @@ export const ResultReportInspector: React.FC<ResultReportInspectorProps> = ({ on
       
       {/* Header */}
       <div className="p-4 border-b border-[#252825]">
-        <div className="flex items-center gap-2 mb-1">
-          <FileText className="w-4 h-4 text-[#39FF14]" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#F5F5F5] font-mono">
-            RESULT &amp; REPORT PANEL
-          </h2>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-[#39FF14]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#F5F5F5] font-mono">
+              RESULT &amp; REPORT PANEL
+            </h2>
+          </div>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+              title="Collapse Properties Inspector (▶)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           Final laboratory certification &amp; academic faculty submission.

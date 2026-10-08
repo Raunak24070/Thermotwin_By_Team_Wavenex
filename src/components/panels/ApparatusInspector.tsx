@@ -7,12 +7,17 @@ import {
   ShieldCheck, 
   Zap, 
   Droplets,
-  Ruler
+  Ruler,
+  ChevronRight
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 import { APPARATUS_CONFIG } from '@/physics/materials';
 
-export const ApparatusInspector: React.FC = () => {
+interface ApparatusInspectorProps {
+  onCollapse?: () => void;
+}
+
+export const ApparatusInspector: React.FC<ApparatusInspectorProps> = ({ onCollapse }) => {
   const { simState, apparatusConfig } = usePhysicsStore();
   const mat = simState.material;
 
@@ -29,11 +34,22 @@ export const ApparatusInspector: React.FC = () => {
       
       {/* Header */}
       <div className="p-4 border-b border-[#252825]">
-        <div className="flex items-center gap-2 mb-1">
-          <Layers className="w-4 h-4 text-[#39FF14]" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#F5F5F5] font-mono">
-            PROPERTIES INSPECTOR
-          </h2>
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#39FF14]" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-[#F5F5F5] font-mono">
+              PROPERTIES INSPECTOR
+            </h2>
+          </div>
+          {onCollapse && (
+            <button
+              onClick={onCollapse}
+              className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+              title="Collapse Properties Inspector (▶)"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           Physical characteristics, boundary matrices, and sensor array geometry.

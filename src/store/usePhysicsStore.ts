@@ -6,7 +6,16 @@ import { MATERIALS, APPARATUS_CONFIG } from '../physics/materials';
 import { Thermal1DSolver } from '../physics/1dRodSolver';
 import { ExperimentEvent } from '../types/db';
 
-export type ViewMode = 'normal' | 'thermal' | 'heatflow' | 'cutaway';
+export type ViewMode = 
+  | 'normal' 
+  | 'thermal' 
+  | 'heatflow' 
+  | 'sensor' 
+  | 'cooling' 
+  | 'heater' 
+  | 'cutaway' 
+  | 'exploded' 
+  | 'cinematic';
 
 interface PhysicsStoreState {
   // Solver Instance
@@ -59,6 +68,12 @@ interface PhysicsStoreState {
     crossSectionArea: number;
   };
 
+  // Layout & Viewport Optimization State
+  leftPanelCollapsed: boolean;
+  rightPanelCollapsed: boolean;
+  isExpandedView: boolean;
+  prevPanelState: { left: boolean; right: boolean } | null;
+
   // Actions
   initSimulation: (materialId?: MaterialId) => void;
   setApparatusConfig: (updates: Partial<{ rodDiameterMm: number; rodLengthCm: number; heaterResistanceR: number }>) => void;
@@ -84,6 +99,12 @@ interface PhysicsStoreState {
   recordObservation: () => void;
   resetSimulation: () => void;
   addEvent: (eventType: ExperimentEvent['eventType'], details: string) => void;
+  setLeftPanelCollapsed: (collapsed: boolean) => void;
+  setRightPanelCollapsed: (collapsed: boolean) => void;
+  toggleLeftPanel: () => void;
+  toggleRightPanel: () => void;
+  setExpandedView: (expanded: boolean) => void;
+  toggleExpandedView: () => void;
 }
 
 const initialMaterial = MATERIALS.copper;
@@ -133,6 +154,84 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
     t9: 0
   },
   chartDataHistory: [],
+  leftPanelCollapsed: false,
+  rightPanelCollapsed: false,
+  isExpandedView: false,
+  prevPanelState: null,
+
+  setLeftPanelCollapsed: (collapsed: boolean) => {
+    set((state) => ({
+      leftPanelCollapsed: collapsed,
+      isExpandedView: !collapsed && state.rightPanelCollapsed ? false : state.isExpandedView
+    }));
+  },
+
+  setRightPanelCollapsed: (collapsed: boolean) => {
+    set((state) => ({
+      rightPanelCollapsed: collapsed,
+      isExpandedView: !collapsed && state.leftPanelCollapsed ? false : state.isExpandedView
+    }));
+  },
+
+  toggleLeftPanel: () => {
+    const { leftPanelCollapsed, rightPanelCollapsed } = get();
+    const next = !leftPanelCollapsed;
+    set({
+      leftPanelCollapsed: next,
+      isExpandedView: next && rightPanelCollapsed
+    });
+  },
+
+  toggleRightPanel: () => {
+    const { leftPanelCollapsed, rightPanelCollapsed } = get();
+    const next = !rightPanelCollapsed;
+    set({
+      rightPanelCollapsed: next,
+      isExpandedView: next && leftPanelCollapsed
+    });
+  },
+
+  setExpandedView: (expanded: boolean) => {
+    const { isExpandedView, leftPanelCollapsed, rightPanelCollapsed, prevPanelState } = get();
+    if (expanded && !isExpandedView) {
+      const saved = prevPanelState || { left: leftPanelCollapsed, right: rightPanelCollapsed };
+      set({
+        isExpandedView: true,
+        leftPanelCollapsed: true,
+        rightPanelCollapsed: true,
+        prevPanelState: saved,
+      });
+    } else if (!expanded && isExpandedView) {
+      const restore = prevPanelState || { left: false, right: false };
+      set({
+        isExpandedView: false,
+        leftPanelCollapsed: restore.left,
+        rightPanelCollapsed: restore.right,
+        prevPanelState: null,
+      });
+    }
+  },
+
+  toggleExpandedView: () => {
+    const { isExpandedView, leftPanelCollapsed, rightPanelCollapsed, prevPanelState } = get();
+    if (!isExpandedView) {
+      const saved = prevPanelState || { left: leftPanelCollapsed, right: rightPanelCollapsed };
+      set({
+        isExpandedView: true,
+        leftPanelCollapsed: true,
+        rightPanelCollapsed: true,
+        prevPanelState: saved,
+      });
+    } else {
+      const restore = prevPanelState || { left: false, right: false };
+      set({
+        isExpandedView: false,
+        leftPanelCollapsed: restore.left,
+        rightPanelCollapsed: restore.right,
+        prevPanelState: null,
+      });
+    }
+  },
 
   setApparatusConfig: (updates) => {
     const { apparatusConfig, solver, addEvent } = get();
@@ -190,91 +289,150 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
 
   startAutomatedDemo: () => {
     const { 
-      solver, 
       setMaterial, 
       setWaterFlow, 
       setVoltage, 
       fastForwardToSteadyState, 
       recordObservation, 
       setViewMode,
-      addEvent 
+      setInspectedPart,
+      setSelectedSensor,
+      addEvent,
+      leftPanelCollapsed,
+      rightPanelCollapsed,
+      prevPanelState
     } = get();
+
+    // Remember previous panel states and collapse both side panels for judge demo
+    const saved = prevPanelState || { left: leftPanelCollapsed, right: rightPanelCollapsed };
 
     // Clear previous demo timers
     demoTimeouts.forEach(clearTimeout);
     demoTimeouts = [];
 
+    // Phase 1: Normal Apparatus Initialization (t = 0s)
     set({ 
       demoStatus: 'RUNNING',
       runStatus: 'RUNNING',
       demoStepIndex: 1,
-      demoStepDescription: 'Step 1/6: Selecting Copper specimen (k = 385 W/m·K)...'
+      demoStepDescription: 'Phase 1/8: Initializing Digital Twin Apparatus (Copper, T_amb = 20.0°C)...',
+      leftPanelCollapsed: true,
+      rightPanelCollapsed: true,
+      isExpandedView: true,
+      prevPanelState: saved,
     });
     setMaterial('copper');
-    addEvent('EXPERIMENT_STARTED', '▶ Automated Instant Demo Started.');
+    setVoltage(0);
+    setWaterFlow(0);
+    setViewMode('normal');
+    setInspectedPart(null);
+    setSelectedSensor(null);
+    addEvent('EXPERIMENT_STARTED', '▶ 8-Phase Digital Twin Hackathon Demo Started.');
 
-    // Step 2: Turn on water cooling (at 1.5s)
+    // Phase 2: Heater Turns ON (at 3.2s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 2,
-        demoStepDescription: 'Step 2/6: Opening Cooling Water valve to 1.50 L/min to establish cold heat sink...' 
+        demoStepDescription: 'Phase 2/8: Heater Unit Engaged (V = 8.0 V, P = 4.27 W) — Joule heat generation begins...' 
       });
-      setWaterFlow(1.5);
-    }, 1500));
+      setVoltage(8.0);
+      setViewMode('heater');
+      setInspectedPart('HEATER');
+    }, 3200));
 
-    // Step 3: Turn on heater voltage (at 3.0s)
+    // Phase 3: Heat Conduction Propagates (at 6.8s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 3,
-        demoStepDescription: 'Step 3/6: Setting electrical heater voltage to 10.0 V (Heat Power = 6.7 W, I = 0.67 A)...' 
+        demoStepDescription: 'Phase 3/8: Heat wave propagates through 50 FDTD nodes — Dynamic thermal gradient emerges...' 
       });
-      setVoltage(10.0);
-    }, 3000));
+      setViewMode('thermal');
+      setInspectedPart(null);
+    }, 6800));
 
-    // Step 4: Show thermal view & fast forward heat diffusion (at 4.5s)
+    // Phase 4: Sensors Activate Sequentially (at 10.5s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 4,
-        demoStepDescription: 'Step 4/6: Visualizing heat diffusion across 3D rod & thermocouples...' 
+        demoStepDescription: 'Phase 4/8: High-precision Thermocouples (T1–T9) tracking axial thermal progression...' 
       });
-      setViewMode('thermal');
-    }, 4500));
+      setViewMode('sensor');
+      setInspectedPart('THERMOCOUPLES');
+      setSelectedSensor('T4');
+    }, 10500));
 
-    // Step 5: Jump to steady state equilibrium (at 6.0s)
+    // Phase 5: Cooling Activates (at 14.5s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 5,
-        demoStepDescription: 'Step 5/6: Thermal equilibrium reached! |dT/dt| < 0.008 °C/s detected.' 
+        demoStepDescription: 'Phase 5/8: Cooling water flow opened to 1.50 L/min — Establishing cold heat sink at x = L...' 
       });
-      fastForwardToSteadyState();
-    }, 6000));
+      setWaterFlow(1.5);
+      setViewMode('cooling');
+      setInspectedPart('COOLING_JACKET');
+      setSelectedSensor(null);
+    }, 14500));
 
-    // Step 6: Log observation & complete (at 7.5s)
+    // Phase 6: Thermal Gradient Stabilizes (at 18.5s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
         demoStepIndex: 6,
-        demoStepDescription: 'Step 6/6: Logging snapshot to lab notebook & calculating Fourier k...' 
+        demoStepDescription: 'Phase 6/8: Heat flux streaming HEATER → COOLING (Q = -kA·dT/dx) — Dynamic thermal gradient stabilizes...' 
       });
-      recordObservation();
-    }, 7500));
+      setViewMode('heatflow');
+      setInspectedPart(null);
+    }, 18500));
 
-    // Finished (at 9.0s)
+    // Phase 7: STEADY STATE Equilibrium (at 22.0s)
     demoTimeouts.push(setTimeout(() => {
       set({ 
-        demoStatus: 'FINISHED',
-        demoStepDescription: 'Demo Complete! View Fourier results and temperature gradient below.' 
+        demoStepIndex: 7,
+        demoStepDescription: 'Phase 7/8: Steady State detected! Thermal equilibrium reached (|dT/dt| < 0.008 °C/s)...' 
       });
-      addEvent('EXPERIMENT_STARTED', '✨ Automated Demo successfully finished.');
-    }, 9000));
+      fastForwardToSteadyState();
+      setViewMode('thermal');
+    }, 22000));
+
+    // Phase 8: Fourier k Result & Snapshot (at 25.5s)
+    demoTimeouts.push(setTimeout(() => {
+      set({ 
+        demoStepIndex: 8,
+        demoStepDescription: 'Phase 8/8: Experimental Fourier k verified (Copper ~ 385 W/m·K) — Snapshot logged to notebook.' 
+      });
+      recordObservation();
+      setViewMode('normal');
+      setInspectedPart(null);
+    }, 25500));
+
+    // Complete (at 28.5s)
+    demoTimeouts.push(setTimeout(() => {
+      const { prevPanelState } = get();
+      const restore = prevPanelState || { left: false, right: false };
+      set({ 
+        demoStatus: 'FINISHED',
+        demoStepDescription: '✓ Hackathon Demo Complete: Full physical conduction cycle successfully verified!',
+        leftPanelCollapsed: restore.left,
+        rightPanelCollapsed: restore.right,
+        isExpandedView: restore.left && restore.right,
+        prevPanelState: null,
+      });
+      addEvent('EXPERIMENT_STARTED', '✨ Digital Twin 8-Phase Demo successfully finished.');
+    }, 28500));
   },
 
   cancelAutomatedDemo: () => {
     demoTimeouts.forEach(clearTimeout);
     demoTimeouts = [];
+    const { prevPanelState } = get();
+    const restore = prevPanelState || { left: false, right: false };
     set({ 
       demoStatus: 'IDLE',
       demoStepDescription: '',
-      demoStepIndex: 0
+      demoStepIndex: 0,
+      leftPanelCollapsed: restore.left,
+      rightPanelCollapsed: restore.right,
+      isExpandedView: restore.left && restore.right,
+      prevPanelState: null,
     });
   },
 
@@ -354,9 +512,32 @@ export const usePhysicsStore = create<PhysicsStoreState>((set, get) => ({
   },
 
   setViewMode: (mode: ViewMode) => {
-    const { addEvent } = get();
+    const { addEvent, viewMode: currentMode, leftPanelCollapsed, rightPanelCollapsed, prevPanelState } = get();
     addEvent('VIEW_MODE_CHANGED', `Laboratory 3D view mode switched to ${mode.toUpperCase()} VIEW`);
-    set({ viewMode: mode });
+    
+    if (mode === 'cinematic' && currentMode !== 'cinematic') {
+      // Auto-collapse both side panels for cinematic immersion
+      const saved = prevPanelState || { left: leftPanelCollapsed, right: rightPanelCollapsed };
+      set({
+        viewMode: mode,
+        prevPanelState: saved,
+        leftPanelCollapsed: true,
+        rightPanelCollapsed: true,
+        isExpandedView: true,
+      });
+    } else if (currentMode === 'cinematic' && mode !== 'cinematic') {
+      // Exiting cinematic: restore previous panel state
+      const restore = prevPanelState || { left: false, right: false };
+      set({
+        viewMode: mode,
+        leftPanelCollapsed: restore.left,
+        rightPanelCollapsed: restore.right,
+        isExpandedView: restore.left && restore.right,
+        prevPanelState: null,
+      });
+    } else {
+      set({ viewMode: mode });
+    }
   },
 
   setSimSpeed: (speed: number) => {

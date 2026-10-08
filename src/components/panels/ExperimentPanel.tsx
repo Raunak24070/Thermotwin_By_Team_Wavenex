@@ -13,18 +13,21 @@ import {
   CheckCircle2, 
   ArrowRight,
   ShieldAlert,
-  Sliders
+  Sliders,
+  ChevronLeft
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 
 interface ExperimentPanelProps {
   onContinueToAnalyze: () => void;
   onOpenRecordModal: () => void;
+  onCollapse?: () => void;
 }
 
 export const ExperimentPanel: React.FC<ExperimentPanelProps> = ({
   onContinueToAnalyze,
-  onOpenRecordModal
+  onOpenRecordModal,
+  onCollapse
 }) => {
   const {
     simState,
@@ -67,15 +70,26 @@ export const ExperimentPanel: React.FC<ExperimentPanelProps> = ({
               02 &bull; RUN EXPERIMENT
             </h2>
           </div>
-          <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold ${
-            isRunning
-              ? 'bg-[#102713] text-[#39FF14] border-[#163D19] glow-green-sm'
-              : isPaused
-              ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30'
-              : 'bg-[#202321] text-[#7C827C] border-[#303330]'
-          }`}>
-            {isRunning ? '● RUNNING' : isPaused ? '⏸ PAUSED' : '■ IDLE'}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold ${
+              isRunning
+                ? 'bg-[#102713] text-[#39FF14] border-[#163D19] glow-green-sm'
+                : isPaused
+                ? 'bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30'
+                : 'bg-[#202321] text-[#7C827C] border-[#303330]'
+            }`}>
+              {isRunning ? '● RUNNING' : isPaused ? '⏸ PAUSED' : '■ IDLE'}
+            </span>
+            {onCollapse && (
+              <button
+                onClick={onCollapse}
+                className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+                title="Collapse Left Panel (◀)"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           FDTD 50-Node Engine &bull; Explicit thermal diffusion solver.

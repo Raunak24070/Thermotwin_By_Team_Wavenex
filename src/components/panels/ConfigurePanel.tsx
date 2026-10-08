@@ -8,7 +8,8 @@ import {
   Info,
   CheckCircle2,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  ChevronLeft
 } from 'lucide-react';
 import { usePhysicsStore } from '@/store/usePhysicsStore';
 import { MATERIALS } from '@/physics/materials';
@@ -16,9 +17,10 @@ import { MaterialId } from '@/physics/types';
 
 interface ConfigurePanelProps {
   onContinue: () => void;
+  onCollapse?: () => void;
 }
 
-export const ConfigurePanel: React.FC<ConfigurePanelProps> = ({ onContinue }) => {
+export const ConfigurePanel: React.FC<ConfigurePanelProps> = ({ onContinue, onCollapse }) => {
   const { 
     simState, 
     apparatusConfig, 
@@ -57,13 +59,24 @@ export const ConfigurePanel: React.FC<ConfigurePanelProps> = ({ onContinue }) =>
               01 &bull; APPARATUS CONFIG
             </h2>
           </div>
-          <button
-            onClick={resetSimulation}
-            className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#F5F5F5] transition-colors cursor-pointer"
-            title="Reset to default settings"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={resetSimulation}
+              className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#F5F5F5] transition-colors cursor-pointer"
+              title="Reset to default settings"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            {onCollapse && (
+              <button
+                onClick={onCollapse}
+                className="p-1 rounded bg-[#202321] hover:bg-[#242725] text-[#7C827C] hover:text-[#39FF14] transition-colors cursor-pointer"
+                title="Collapse Left Panel (◀)"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-[11px] text-[#7C827C] font-mono">
           Configure specimen material, physical geometry, and boundary thermal inputs.

@@ -92,7 +92,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) =
             </span>
 
             <div className="flex flex-col gap-1.5">
-              {registeredUsers.map((u) => {
+              {(registeredUsers || []).map((u) => {
                 const isActive = u.id === currentUser?.id;
                 return (
                   <button

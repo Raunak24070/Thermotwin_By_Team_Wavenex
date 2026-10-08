@@ -254,18 +254,27 @@ export const ControlPanel: React.FC = () => {
           <Eye className="w-3.5 h-3.5 text-emerald-400" />
           3D Visualization Mode
         </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-          {(['normal', 'thermal', 'heatflow', 'cutaway'] as ViewMode[]).map((mode) => (
+        <div className="grid grid-cols-4 gap-1.5">
+          {([
+            { id: 'normal', label: 'Normal' },
+            { id: 'thermal', label: 'Thermal' },
+            { id: 'heatflow', label: 'Flux' },
+            { id: 'sensor', label: 'Sensors' },
+            { id: 'cooling', label: 'Cooler' },
+            { id: 'heater', label: 'Heater' },
+            { id: 'cutaway', label: 'X-Ray' },
+            { id: 'exploded', label: 'Exploded' },
+          ] as const).map(({ id, label }) => (
             <button
-              key={mode}
-              onClick={() => setViewMode(mode)}
-              className={`py-1.5 px-1.5 rounded-lg text-[11px] font-bold uppercase transition-all border cursor-pointer text-center ${
-                viewMode === mode
-                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-md'
+              key={id}
+              onClick={() => setViewMode(id as ViewMode)}
+              className={`py-1.5 px-1 rounded-lg text-[10px] font-bold uppercase transition-all border cursor-pointer text-center ${
+                viewMode === id
+                  ? 'bg-emerald-500/15 border-emerald-500 text-emerald-300 shadow-md glow-green-sm'
                   : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
               }`}
             >
-              {mode === 'heatflow' ? 'Flux' : mode}
+              {label}
             </button>
           ))}
         </div>

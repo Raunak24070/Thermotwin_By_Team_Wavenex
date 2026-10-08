@@ -19,7 +19,7 @@ export const FourierWorkbench: React.FC<FourierWorkbenchProps> = ({ onSubmittedS
   const [selectedFacultyOption, setSelectedFacultyOption] = useState<string>('');
   const [customFacultyInput, setCustomFacultyInput] = useState<string>('');
 
-  const registeredTeachers = registeredUsers.filter((u) => u.role === 'TEACHER');
+  const registeredTeachers = (registeredUsers || []).filter((u) => u?.role === 'TEACHER');
 
   const analysis = performFourierAnalysis(
     simState.voltage,

@@ -10,7 +10,8 @@ import {
   Layers,
   ChevronLeft,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Thermometer
 } from 'lucide-react';
 import { TopBar } from './TopBar';
 import { IconRail, ActiveTool } from './IconRail';
@@ -20,6 +21,7 @@ import { ExperimentPanel } from '../panels/ExperimentPanel';
 import { LiveTelemetryInspector } from '../panels/LiveTelemetryInspector';
 import { AnalysisPanel } from '../panels/AnalysisPanel';
 import { FourierCenterWorkspace } from '../panels/FourierCenterWorkspace';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { ResultReportInspector } from '../panels/ResultReportInspector';
 import { CollapsibleGraphPanel } from '../panels/CollapsibleGraphPanel';
 import { LabCanvas } from '../3d/LabCanvas';
@@ -40,7 +42,14 @@ import { useRealtimeMonitorStore } from '@/store/useRealtimeMonitorStore';
 
 export const AppShell: React.FC = () => {
   // Cinematic 15-second opening animation state ("Heat is everywhere")
-  const [showIntro, setShowIntro] = useState<boolean>(true);
+  const [showIntro, setShowIntro] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('nointro') === '1') return false;
+      return !sessionStorage.getItem('thermotwin_intro_seen');
+    }
+    return true;
+  });
 
   // Core Workflow Step: 1 (Configure) -> 2 (Experiment) -> 3 (Analyze & Submit)
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -56,10 +65,7 @@ export const AppShell: React.FC = () => {
   const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isEventLogOpen, setIsEventLogOpen] = useState<boolean>(false);
-
-  // Collapsible Left / Right Panels on smaller displays
-  const [leftPanelCollapsed, setLeftPanelCollapsed] = useState<boolean>(false);
-  const [rightPanelCollapsed, setRightPanelCollapsed] = useState<boolean>(false);
+  const [isFourierOpen, setIsFourierOpen] = useState<boolean>(false);
 
   // Physics & User Stores
   const { 
@@ -67,10 +73,57 @@ export const AppShell: React.FC = () => {
     stepSimulation, 
     simState, 
     runStatus, 
-    recordObservation 
+    recordObservation,
+    leftPanelCollapsed,
+    rightPanelCollapsed,
+    isExpandedView,
+    toggleLeftPanel,
+    toggleRightPanel,
+    setExpandedView,
+    toggleExpandedView
   } = usePhysicsStore();
   const { currentUser } = useAuthStore();
   const { updateStudentTelemetry } = useRealtimeMonitorStore();
+
+  // Smoothly dispatch window resize events across the 350ms transition so Three.js canvas dynamically updates
+  useEffect(() => {
+    const startTime = performance.now();
+    const duration = 380;
+    let animId: number;
+
+    const triggerResize = (now: number) => {
+      window.dispatchEvent(new Event('resize'));
+      if (now - startTime < duration) {
+        animId = requestAnimationFrame(triggerResize);
+      }
+    };
+
+    animId = requestAnimationFrame(triggerResize);
+    return () => cancelAnimationFrame(animId);
+  }, [leftPanelCollapsed, rightPanelCollapsed, isExpandedView]);
+
+  // Global Keyboard Shortcuts (F to toggle Expanded View, ESC to exit)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return;
+      }
+
+      if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        toggleExpandedView();
+      } else if (e.key === 'Escape') {
+        if (isExpandedView) {
+          e.preventDefault();
+          setExpandedView(false);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleExpandedView, setExpandedView, isExpandedView]);
 
   const lastTimeRef = useRef<number>(performance.now());
   const reqAnimRef = useRef<number | null>(null);
@@ -158,6 +211,7 @@ export const AppShell: React.FC = () => {
         break;
       case 'FOURIER':
         setCurrentStep(3);
+        setIsFourierOpen(true);
         break;
       case 'REPORT':
         setIsReportOpen(true);
@@ -185,7 +239,10 @@ export const AppShell: React.FC = () => {
       {/* 1. TOP NAVIGATION BAR */}
       <TopBar
         currentStep={currentStep}
-        onSelectStep={setCurrentStep}
+        onSelectStep={(step) => {
+          setCurrentStep(step);
+          if (step === 3) setIsFourierOpen(true);
+        }}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenGuide={() => setIsGuideOpen(true)}
         onOpenNotifications={() => setIsEventLogOpen(true)}
@@ -201,24 +258,75 @@ export const AppShell: React.FC = () => {
           onSelectTool={handleSelectTool}
         />
 
-        {/* CONTEXTUAL LEFT PANEL (320px) */}
-        {!leftPanelCollapsed && (
-          <div className="h-full shrink-0 z-10 transition-all duration-200">
-            {currentStep === 1 ? (
-              <ConfigurePanel onContinue={() => setCurrentStep(2)} />
-            ) : currentStep === 2 ? (
-              <ExperimentPanel
-                onContinueToAnalyze={() => setCurrentStep(3)}
-                onOpenRecordModal={() => setIsObservationOpen(true)}
-              />
-            ) : (
-              <AnalysisPanel
-                onBackToExperiment={() => setCurrentStep(2)}
-                onOpenNotebook={() => setIsObservationOpen(true)}
-              />
-            )}
-          </div>
-        )}
+        {/* CONTEXTUAL LEFT PANEL (Animated collapse between 320px and 48px rail) */}
+        <aside 
+          className={`h-full shrink-0 z-10 transition-all duration-300 ease-in-out border-r border-[#252825] bg-[#171918] flex flex-col overflow-hidden ${
+            leftPanelCollapsed ? 'w-12' : 'w-80'
+          }`}
+        >
+          {leftPanelCollapsed ? (
+            /* Collapsed narrow rail (48px) */
+            <div 
+              className="w-12 h-full flex flex-col items-center py-3 justify-between select-none cursor-pointer group hover:bg-[#1C201D] transition-colors"
+              onClick={toggleLeftPanel}
+              title="Click to expand Left Panel"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleLeftPanel();
+                  }}
+                  className="w-8 h-8 rounded-lg bg-[#202321] hover:bg-[#282C29] border border-[#303330] hover:border-[#39FF14] text-[#B5BBB5] hover:text-[#39FF14] flex items-center justify-center transition-all cursor-pointer shadow-md"
+                  title="Expand Left Panel (›)"
+                >
+                  <ChevronRight className="w-4 h-4 text-[#39FF14]" />
+                </button>
+
+                <div className="flex flex-col items-center gap-2.5 pt-2 text-[#7C827C]">
+                  <span className="text-sm select-none" title="Apparatus">🧪</span>
+                  <span className="text-sm select-none" title="Configuration">⚙</span>
+                  <span className="text-sm select-none" title="Thermal Conduction">🔥</span>
+                </div>
+              </div>
+
+              {/* Rotated badge label */}
+              <div 
+                className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#7C827C] group-hover:text-[#39FF14] transition-colors py-4 uppercase"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+              >
+                <span>{currentStep === 1 ? 'CONFIG' : currentStep === 2 ? 'EXPERIMENT' : 'ANALYSIS'}</span>
+              </div>
+
+              <div className="w-2 h-2 rounded-full bg-[#39FF14]/50 animate-pulse" />
+            </div>
+          ) : (
+            /* Expanded full panel */
+            <div className="w-80 h-full flex flex-col relative overflow-hidden">
+              {currentStep === 1 ? (
+                <ConfigurePanel 
+                  onContinue={() => setCurrentStep(2)} 
+                  onCollapse={toggleLeftPanel}
+                />
+              ) : currentStep === 2 ? (
+                <ExperimentPanel
+                  onContinueToAnalyze={() => {
+                    setCurrentStep(3);
+                    setIsFourierOpen(true);
+                  }}
+                  onOpenRecordModal={() => setIsObservationOpen(true)}
+                  onCollapse={toggleLeftPanel}
+                />
+              ) : (
+                <AnalysisPanel
+                  onBackToExperiment={() => setCurrentStep(2)}
+                  onOpenNotebook={() => setIsObservationOpen(true)}
+                  onCollapse={toggleLeftPanel}
+                />
+              )}
+            </div>
+          )}
+        </aside>
 
         {/* CENTER WORKSPACE: 3D DIGITAL TWIN HERO OR FOURIER WORKBENCH */}
         <main className="flex-1 flex flex-col h-full bg-[#111312] overflow-hidden relative z-0">
@@ -252,7 +360,10 @@ export const AppShell: React.FC = () => {
                     Record
                   </button>
                   <button
-                    onClick={() => setCurrentStep(3)}
+                    onClick={() => {
+                      setCurrentStep(3);
+                      setIsFourierOpen(true);
+                    }}
                     className="px-3 py-1.5 rounded-xl bg-[#171918] border border-[#303330] text-[#8BEA63] font-bold text-xs uppercase cursor-pointer hover:text-[#F5F5F5] transition-all"
                   >
                     Analyze &rarr;
@@ -262,59 +373,92 @@ export const AppShell: React.FC = () => {
             </div>
           )}
 
-          {/* Central Workspace Body */}
-          {currentStep === 1 || currentStep === 2 ? (
-            <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-              
-              {/* 3D Digital Twin Viewport (Hero Element) */}
-              <div className="flex-1 w-full h-full relative">
-                <LabCanvas />
-
-                {/* Thermal Color Gradient Scale Legend Bar */}
-                <div className="absolute bottom-3 left-3 z-10 bg-[#111312]/90 backdrop-blur-md border border-[#252825] px-3 py-2 rounded-xl text-[10px] font-mono flex flex-col gap-1 shadow-xl">
-                  <div className="flex justify-between text-[#7C827C]">
-                    <span>20&deg;C (Cool)</span>
-                    <span className="text-[#F5F5F5] font-semibold">Thermal Gradient</span>
-                    <span>120&deg;C (Hot)</span>
-                  </div>
-                  <div 
-                    className="h-2 w-52 rounded-full"
-                    style={{
-                      background: 'linear-gradient(to right, #2563EB, #38BDF8, #F59E0B, #FF6B35, #EF4444)'
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Collapsible Real-Time Temperature Graph Panel */}
-              <CollapsibleGraphPanel />
+          {/* Central Workspace Body: 3D Digital Twin Hero ALWAYS active */}
+          <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+            {/* 3D Digital Twin Viewport (Hero Element - NEVER UNMOUNTS) */}
+            <div className="flex-1 w-full h-full relative">
+              <LabCanvas />
             </div>
-          ) : (
-            /* Step 03: Fourier Workbench Analysis Environment */
-            <FourierCenterWorkspace />
-          )}
+
+            {/* Collapsible Real-Time Temperature Graph Panel */}
+            <CollapsibleGraphPanel />
+
+            {/* Step 03: Fourier Workbench Analysis Environment (Workspace Modal / Drawer) */}
+            {isFourierOpen && (
+              <ErrorBoundary fallbackMessage="Insufficient experiment data for Fourier calculation.">
+                <FourierCenterWorkspace onClose={() => setIsFourierOpen(false)} />
+              </ErrorBoundary>
+            )}
+          </div>
 
         </main>
 
-        {/* RIGHT PROPERTIES / TELEMETRY / RESULT INSPECTOR (320px) */}
-        {!rightPanelCollapsed && (
-          <div className="h-full shrink-0 z-10 transition-all duration-200">
-            {currentStep === 1 ? (
-              <ApparatusInspector />
-            ) : currentStep === 2 ? (
-              <LiveTelemetryInspector
-                onQuickRecord={() => {
-                  recordObservation();
-                  setIsObservationOpen(true);
-                }}
-              />
-            ) : (
-              <ResultReportInspector
-                onOpenReportPreview={() => setIsReportOpen(true)}
-              />
-            )}
-          </div>
-        )}
+        {/* RIGHT PROPERTIES / TELEMETRY / RESULT INSPECTOR (Animated collapse between 320px and 48px rail) */}
+        <aside 
+          className={`h-full shrink-0 z-10 transition-all duration-300 ease-in-out border-l border-[#252825] bg-[#171918] flex flex-col overflow-hidden ${
+            rightPanelCollapsed ? 'w-12' : 'w-80'
+          }`}
+        >
+          {rightPanelCollapsed ? (
+            /* Collapsed narrow rail (48px) */
+            <div 
+              className="w-12 h-full flex flex-col items-center py-3 justify-between select-none cursor-pointer group hover:bg-[#1C201D] transition-colors"
+              onClick={toggleRightPanel}
+              title="Click to expand Properties Inspector"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleRightPanel();
+                  }}
+                  className="w-8 h-8 rounded-lg bg-[#202321] hover:bg-[#282C29] border border-[#303330] hover:border-[#39FF14] text-[#B5BBB5] hover:text-[#39FF14] flex items-center justify-center transition-all cursor-pointer shadow-md"
+                  title="Expand Properties Inspector (‹)"
+                >
+                  <ChevronLeft className="w-4 h-4 text-[#39FF14]" />
+                </button>
+
+                <div className="flex flex-col items-center gap-2.5 pt-2 text-[#7C827C]">
+                  <Layers className="w-4 h-4 text-[#7C827C]" />
+                  <Activity className="w-4 h-4 text-[#39FF14]" />
+                  <Thermometer className="w-4 h-4 text-[#38BDF8]" />
+                </div>
+              </div>
+
+              {/* Rotated badge label */}
+              <div 
+                className="flex items-center gap-1.5 text-[10px] font-mono tracking-widest text-[#7C827C] group-hover:text-[#39FF14] transition-colors py-4 uppercase"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+              >
+                <span>{currentStep === 1 ? 'PROPERTIES' : currentStep === 2 ? 'TELEMETRY' : 'REPORT'}</span>
+              </div>
+
+              <div className="w-2 h-2 rounded-full bg-[#39FF14]/50 animate-pulse" />
+            </div>
+          ) : (
+            /* Expanded full inspector */
+            <div className="w-80 h-full flex flex-col relative overflow-hidden">
+              <ErrorBoundary fallbackMessage="Inspector component temporarily unavailable.">
+                {currentStep === 1 ? (
+                  <ApparatusInspector onCollapse={toggleRightPanel} />
+                ) : currentStep === 2 ? (
+                  <LiveTelemetryInspector
+                    onQuickRecord={() => {
+                      recordObservation();
+                      setIsObservationOpen(true);
+                    }}
+                    onCollapse={toggleRightPanel}
+                  />
+                ) : (
+                  <ResultReportInspector
+                    onOpenReportPreview={() => setIsReportOpen(true)}
+                    onCollapse={toggleRightPanel}
+                  />
+                )}
+              </ErrorBoundary>
+            </div>
+          )}
+        </aside>
 
       </div>
 
@@ -359,7 +503,10 @@ export const AppShell: React.FC = () => {
 
       {/* 4. 15-SECOND CINEMATIC OPENING ANIMATION ("Heat is Everywhere") */}
       {showIntro && (
-        <CinematicIntro onComplete={() => setShowIntro(false)} />
+        <CinematicIntro onComplete={() => {
+          setShowIntro(false);
+          try { sessionStorage.setItem('thermotwin_intro_seen', 'true'); } catch {}
+        }} />
       )}
 
     </div>
